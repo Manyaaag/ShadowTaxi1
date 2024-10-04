@@ -1,5 +1,6 @@
 import bagel.Font;
 import bagel.Input;
+import bagel.Keys;
 
 import java.util.*;
 
@@ -9,6 +10,9 @@ import java.util.*;
 public class GamePlayScreen{
     private final Properties GAME_PROPS;
     private final Properties MSG_PROPS;
+    private final ArrayList<Car> cars = new ArrayList<>();
+    // Declare the ArrayList for cars
+    private InvinciblePower[] invinciblePowers;
 
     // keep track of earning and coin timout
     private float totalEarnings;
@@ -18,8 +22,10 @@ public class GamePlayScreen{
 
     // game objects
     private Taxi taxi;
+    private Driver driver;
     private Passenger[] passengers;
     private Coin[] coins;
+    private InvinciblePower invinciblePower;
     private Background background1;
     private Background background2;
 
@@ -100,31 +106,39 @@ public class GamePlayScreen{
         // Since you haven't learned Lists in Java, we have to use two for loops to iterate over the lines.
         int passengerCount = 0;
         int coinCount = 0;
+        int invinciblePowerCount = 0;
         for(String[] lineElement: lines) {
             if(lineElement[0].equals(GameObjectType.PASSENGER.name())) {
                 passengerCount++;
             } else if(lineElement[0].equals(GameObjectType.COIN.name())) {
                 coinCount++;
+            } else if (lineElement[0].equals(GameObjectType.INVINCIBLE_POWER.name())) {  // New case for InvinciblePower
+                invinciblePowerCount++;
             }
         }
         passengers = new Passenger[passengerCount];
         coins = new Coin[coinCount];
+        invinciblePowers = new InvinciblePower[invinciblePowerCount];
 
         // process each line in the file
         int passenger_idx = 0;
         int coin_idx = 0;
+        int invinciblePower_idx = 0;
         for(String[] lineElement: lines) {
             int x = Integer.parseInt(lineElement[1]);
             int y = Integer.parseInt(lineElement[2]);
 
             if(lineElement[0].equals(GameObjectType.TAXI.name())) {
                 taxi = new Taxi(x, y, passengerCount, this.GAME_PROPS);
+                //AHHHHH
+                driver = new Driver(x, y, GAME_PROPS);  // pass taxi's x, y to the Driver constructor
             } else if(lineElement[0].equals(GameObjectType.PASSENGER.name())) {
                 int priority = Integer.parseInt(lineElement[3]);
                 int travelEndX = Integer.parseInt(lineElement[4]);
                 int travelEndY = Integer.parseInt(lineElement[5]);
+                boolean hasUM = Boolean.parseBoolean(lineElement[6]);
 
-                Passenger passenger = new Passenger(x, y, priority, travelEndX, travelEndY, GAME_PROPS);
+                Passenger passenger = new Passenger(x, y, priority, travelEndX, travelEndY, hasUM,  GAME_PROPS);
                 passengers[passenger_idx] = passenger;
                 passenger_idx++;
 
@@ -132,6 +146,11 @@ public class GamePlayScreen{
                 Coin coinPower = new Coin(x, y, this.GAME_PROPS);
                 coins[coin_idx] = coinPower;
                 coin_idx++;
+
+            } else if (lineElement[0].equals(GameObjectType.INVINCIBLE_POWER.name())) {  // Case for InvinciblePower
+                InvinciblePower invinciblePower = new InvinciblePower(x, y, GAME_PROPS);  // Use coordinates from the file
+                invinciblePowers[invinciblePower_idx] = invinciblePower;
+                invinciblePower_idx++;
             }
         }
     }
@@ -154,8 +173,41 @@ public class GamePlayScreen{
         for(Passenger passenger: passengers) {
             passenger.updateWithTaxi(input, taxi);
         }
+        for (InvinciblePower invinciblePower : invinciblePowers) {
+            invinciblePower.draw();
+        }
 
         taxi.update(input);
+        driver.updateWithTaxi(input, taxi);
+
+        for (InvinciblePower invinciblePower : invinciblePowers) {
+            invinciblePower.update(input.isDown(Keys.UP));
+            //invinciblePower.collide(taxi);  // Check for collision with taxi
+            //invinciblePower.collide(driver);  // Check for collision with driver
+        }
+
+        // Render cars
+        for (Car car : cars) {
+            car.draw();
+        }
+
+        // ** Car creation logic **
+        if (new Random().nextInt(1000) % 200 == 0) {  // Randomly create a car
+            cars.add(new Car(GAME_PROPS));
+        }
+
+        // Update existing cars
+        for (Car car : cars) {
+            car.update();
+        }
+
+
+
+        // Check for collisions with taxi and driver
+        //invinciblePower.collide(taxi);
+        //invinciblePower.collide(driver);
+
+
         totalEarnings = taxi.calculateTotalEarnings();
 
         if(coins.length > 0) {
@@ -192,7 +244,8 @@ public class GamePlayScreen{
         if(coins.length > 0 && coins[0].getMaxFrames() != coinFramesActive) {
             INFO_FONT.drawString(String.valueOf(Math.round(coinFramesActive)), COIN_X, COIN_Y);
         }
-
+        // Draw the driver if not in the taxi
+        //driver.draw();
         Trip lastTrip = taxi.getLastTrip();
         if(lastTrip != null) {
             if(lastTrip.isComplete()) {

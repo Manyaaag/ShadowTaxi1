@@ -28,8 +28,9 @@ public class Passenger {
     private int moveY;
 
     private boolean reachedFlag;
+    private boolean hasUM;
 
-    public Passenger(int x, int y, int priority, int endX, int distanceY, Properties props) {
+    public Passenger(int x, int y, int priority, int endX, int distanceY, boolean hasUM, Properties props) {
 
         this.WALK_SPEED_X = Integer.parseInt(props.getProperty("gameObjects.passenger.walkSpeedX"));
         this.WALK_SPEED_Y = Integer.parseInt(props.getProperty("gameObjects.passenger.walkSpeedY"));
@@ -43,6 +44,7 @@ public class Passenger {
         this.moveY = 0;
         this.PRIORITY_OFFSET = 30;
         this.EXPECTED_FEE_OFFSET = 100;
+        this.hasUM = hasUM;
 
         this.SPEED_Y = Integer.parseInt(props.getProperty("gameObjects.taxi.speedY"));
         this.IMAGE = new Image(props.getProperty("gameObjects.passenger.image"));
