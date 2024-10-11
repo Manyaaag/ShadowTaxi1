@@ -11,6 +11,7 @@ public class GamePlayScreen{
     private final Properties GAME_PROPS;
     private final Properties MSG_PROPS;
     private final ArrayList<Car> cars = new ArrayList<>();
+    private final ArrayList<EnemyCar> enemyCars = new ArrayList<>();
     // Declare the ArrayList for cars
     private InvinciblePower[] invinciblePowers;
 
@@ -102,6 +103,7 @@ public class GamePlayScreen{
                 Integer.parseInt(GAME_PROPS.getProperty("window.width")) / 2,
                 -1 * Integer.parseInt(GAME_PROPS.getProperty("window.height")) / 2,
                 GAME_PROPS);
+        //enemyCars.add(new EnemyCar(GAME_PROPS));  // Add one enemy car statically at the beginning
 
         // Since you haven't learned Lists in Java, we have to use two for loops to iterate over the lines.
         int passengerCount = 0;
@@ -164,6 +166,8 @@ public class GamePlayScreen{
      * @param input
      * @return true if the game is finished, false otherwise
      */
+
+
     public boolean update(Input input) {
         currFrame++;
 
@@ -189,12 +193,63 @@ public class GamePlayScreen{
         // Render cars
         for (Car car : cars) {
             car.draw();
+            //car.update();
+
+            // Handle collision with Taxi
+            car.collide(taxi);
+
+            // Check for collision with other Cars
+            for (Car otherCar : cars) {
+                if (car != otherCar) {
+                    car.collideWithOtherCar(otherCar);
+                }
+            }
+
+            // Check for collision with EnemyCars
+            for (EnemyCar enemyCar : enemyCars) {
+                car.collideWithEnemyCar(enemyCar);
+            }
         }
+
+
 
         // ** Car creation logic **
         if (new Random().nextInt(1000) % 200 == 0) {  // Randomly create a car
+            //cars.add(new Car(GAME_PROPS));
             cars.add(new Car(GAME_PROPS));
         }
+
+        if (new Random().nextInt(1000) % 400 == 0) {  // Adjust frequency as desired
+            enemyCars.add(new EnemyCar(GAME_PROPS));
+        }
+
+         //Update and render EnemyCars
+        for (EnemyCar enemyCar : enemyCars) {
+            //enemyCar.update();
+            enemyCar.draw();
+        }
+
+        for (EnemyCar enemyCar : enemyCars) {
+            //enemyCar.draw();
+            enemyCar.update();
+
+            // Handle collision with Taxi
+            enemyCar.collide(taxi);
+
+            // Check for collision with other EnemyCars
+            for (EnemyCar otherEnemy : enemyCars) {
+                if (enemyCar != otherEnemy) {
+                    enemyCar.collide(otherEnemy);
+                }
+            }
+
+            // Check for collision with Cars
+            for (Car car : cars) {
+                enemyCar.collide(car);
+            }
+
+        }
+
 
         // Update existing cars
         for (Car car : cars) {
@@ -230,6 +285,10 @@ public class GamePlayScreen{
         return isGameOver() || isLevelCompleted();
 
     }
+
+
+
+
 
     /**
      * Display the game information on the screen.
@@ -299,3 +358,4 @@ public class GamePlayScreen{
         return isLevelCompleted;
     }
 }
+

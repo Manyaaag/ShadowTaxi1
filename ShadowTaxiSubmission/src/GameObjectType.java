@@ -6,5 +6,6 @@ public enum GameObjectType {
     PASSENGER,
     COIN,
     INVINCIBLE_POWER,  // Add this to support invincible powers
-    CAR
+    CAR,
+    ENEMY_CAR
 }

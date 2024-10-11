@@ -2,7 +2,7 @@ import bagel.*;
 
 import java.util.Properties;
 
-public class ShadowTaxi extends AbstractGame {
+public class   ShadowTaxi extends AbstractGame {
 
     private final Properties GAME_PROPS;
     private final Properties MESSAGE_PROPS;
