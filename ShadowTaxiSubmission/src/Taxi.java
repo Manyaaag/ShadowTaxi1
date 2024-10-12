@@ -25,10 +25,13 @@ public class Taxi implements Collidable {
     protected Coin coinPower;
     private Trip trip;
 
+
     private static final int SMOKE_RENDER_TIMEOUT_FRAMES = 20;  // Smoke render duration
     private static final int FIRE_RENDER_TIMEOUT_FRAMES = 20;
-    private int smokeRenderTimeout = 0;
-    private int fireRenderTimeout = 0;
+    private int smokeRenderTimeout;
+    private int fireRenderTimeout;
+
+
     public Taxi(int x, int y, int maxTripCount, Properties props) {
         this.x = x;
         this.y = y;
@@ -41,6 +44,8 @@ public class Taxi implements Collidable {
 
         this.collisionTimeout = 0;
         this.smokeRenderTimeout = 0;
+        this.fireRenderTimeout = 0;
+
     }
 
     public int getX() {
@@ -65,13 +70,13 @@ public class Taxi implements Collidable {
     }
 
     // Setter for health
-    public void setHealth(float health) {
-        this.health = health;
-        if (this.health <= 0) {
-            isDestroyed = true;
-            // Add logic here if you want to render fire or change the taxi image to 'damaged' when health reaches zero
-        }
-    }
+//    public void setHealth(float health) {
+//        this.health = health;
+//        if (this.health <= 0) {
+//            isDestroyed = true;
+//            // Add logic here if you want to render fire or change the taxi image to 'damaged' when health reaches zero
+//        }
+//    }
 
 
     public float getRadius() {
@@ -118,8 +123,9 @@ public class Taxi implements Collidable {
             }
         }
 
-        if (input != null) adjustToInputMovement(input);
-        if (!isDestroyed) draw();
+        //if (input != null) adjustToInputMovement(input);
+        //if (!isDestroyed) draw();
+        draw();
         if (collisionTimeout > 0) collisionTimeout--;
         if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
     }
@@ -178,6 +184,54 @@ public class Taxi implements Collidable {
         coinPower = coin;
     }
 
+
+
+
+/*
+    public void draw() {
+        // Case when health is zero or below: render fire and damaged image
+        if (health <= 0) {
+            health = 0;  // Clamp health to zero
+            isDestroyed = true;
+
+            // Render fire image for a limited duration
+            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+                //System.out.println("Taxi Health: " + health + " - Rendering fire.");
+                Image fireImage = new Image("res/fire.png");
+                fireImage.draw(this.x, this.y);
+                fireRenderTimeout++;
+
+            }
+
+
+            // Always render damaged image if health is zero
+            Image damagedImage = new Image("res/taxiDamaged.png");
+            damagedImage.draw(this.x, this.y);
+            //fireRenderTimeout = 0;
+        }
+
+        // Case when health is low but above zero: render smoke and damaged image
+//        else if (health < 50) {
+//            if (smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
+//                System.out.println("Taxi Health: " + health + " - Rendering smoke.");
+//                Image smokeImage = new Image("res/smoke.png");
+//                smokeImage.draw(this.x, this.y);
+//                smokeRenderTimeout++;
+//            }
+//
+//            // Render damaged taxi if health is below 50
+//            Image damagedImage = new Image("res/taxiDamaged.png");
+//            damagedImage.draw(this.x, this.y);
+//        }
+        // Normal rendering when health is above 50
+        else {
+            System.out.println("Taxi Health: " + health + " - Rendering normal taxi.");
+            IMAGE.draw(this.x, this.y);
+        }
+    }
+
+ */
+
     public void draw() {
         if (health <= 0) {
             if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
@@ -207,13 +261,21 @@ public class Taxi implements Collidable {
 
 
 
+
+
+
+
+
+
     public void takeDamage(float damage) {
         if (collisionTimeout == 0 && invincibilityFrames == 0) {
             health -= damage;
             if (health <= 0) {
+                health = 0;
                 isDestroyed = true;
                 // Render fire effect here if needed
             }
+            collisionTimeout = 200;
         }
     }
 

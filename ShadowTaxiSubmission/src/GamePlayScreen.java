@@ -29,6 +29,8 @@ public class GamePlayScreen{
 
     private Background background1;
     private Background background2;
+    private Background background3;
+    private Background background4;
 
     private final float TARGET;
     private final int MAX_FRAMES;
@@ -58,9 +60,29 @@ public class GamePlayScreen{
     private final int TRIP_INFO_OFFSET_2;
     private final int TRIP_INFO_OFFSET_3;
 
+    // Weather-related
+    private List<WeatherCondition> weatherConditions;
+    private boolean isRaining;
+    private Background rainyBackground;
+    private Background sunnyBackground;
+    private Background currentBackground;
+
     public GamePlayScreen(Properties gameProps, Properties msgProps, String playerName) {
         this.GAME_PROPS = gameProps;
         this.MSG_PROPS = msgProps;
+//        this.weatherConditions = loadWeatherConditions(gameProps.getProperty("gamePlay.weatherFile"));
+//        this.sunnyBackground = new Background(
+//                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
+//                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
+//                gameProps.getProperty("backgroundImage.sunny"));
+//
+//        this.rainyBackground = new Background(
+//                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
+//                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
+//                gameProps.getProperty("backgroundImage.raining"));
+//
+//        // Initial background set to sunny
+//        currentBackground = sunnyBackground;
 
         // read game objects from file and weather file and populate the game objects and weather conditions
         ArrayList<String[]> lines = IOUtils.readCommaSeperatedFile(gameProps.getProperty("gamePlay.objectsFile"));

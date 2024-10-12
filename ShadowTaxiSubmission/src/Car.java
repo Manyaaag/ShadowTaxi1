@@ -134,6 +134,7 @@ public class Car implements Collidable{
         health -= damage;
         if (health <= 0) {
             isDestroyed = true;
+
             // Render fire effect if needed
         }
     }
@@ -201,9 +202,9 @@ public class Car implements Collidable{
             Taxi taxi = (Taxi) entity;
             // Handle collision logic directly without calling another method
             if (!taxi.isDestroyed() && hasCollided((Collidable) taxi)) {
-                takeDamage(taxi.getDamage());
+                takeDamage(taxi.getDamage()*100); //////MADE CHANGES OT THIS, HAS AN AFFECT IN THE GAME
                 //taxi.takeDamage(getDamage());
-                taxi.takeDamage(DAMAGE_POINTS);
+                taxi.takeDamage(DAMAGE_POINTS*100);
                 applyKnockback(taxi);
                 smokeImage.draw(this.x, this.y);
             }
@@ -244,7 +245,7 @@ public class Car implements Collidable{
         float distance = (float) Math.sqrt(Math.pow(this.x - otherCar.getX(), 2) + Math.pow(this.y - otherCar.getY(), 2));
         if (distance < this.RADIUS + otherCar.getRadius()) {
             this.takeDamage(otherCar.getDamage());
-            otherCar.takeDamage(this.DAMAGE_POINTS);
+            otherCar.takeDamage(this.DAMAGE_POINTS*100);
             this.collisionTimeout = COLLISION_TIMEOUT;
             otherCar.collisionTimeout = COLLISION_TIMEOUT;
             applyKnockback(otherCar);
