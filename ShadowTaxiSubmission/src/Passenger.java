@@ -29,6 +29,7 @@ public class Passenger {
 
     private boolean reachedFlag;
     private boolean hasUM;
+    public float health = 100;
 
     public Passenger(int x, int y, int priority, int endX, int distanceY, boolean hasUM, Properties props) {
 
@@ -216,6 +217,9 @@ public class Passenger {
         } else {
             walkDirectionY = 0;
         }
+    }
+    public float getHealth() {
+        return health;
     }
 
     /**

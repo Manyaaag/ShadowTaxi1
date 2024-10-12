@@ -13,20 +13,20 @@ public class GamePlayScreen{
     private final ArrayList<Car> cars = new ArrayList<>();
     private final ArrayList<EnemyCar> enemyCars = new ArrayList<>();
     // Declare the ArrayList for cars
-    private InvinciblePower[] invinciblePowers;
+
 
     // keep track of earning and coin timout
     private float totalEarnings;
     private float coinFramesActive;
 
     private int currFrame = 0;
-
+    private InvinciblePower[] invinciblePowers;
     // game objects
     private Taxi taxi;
     private Driver driver;
     private Passenger[] passengers;
     private Coin[] coins;
-    private InvinciblePower invinciblePower;
+
     private Background background1;
     private Background background2;
 
@@ -47,6 +47,10 @@ public class GamePlayScreen{
     private final int TARGET_Y;
     private final int MAX_FRAMES_X;
     private final int MAX_FRAMES_Y;
+    private final int TAXI_HEALTH_X;
+    private final int TAXI_HEALTH_Y;
+    private final int DRIVER_HEALTH_X;
+    private final int DRIVER_HEALTH_Y;
 
     private final int TRIP_INFO_X;
     private final int TRIP_INFO_Y;
@@ -76,6 +80,14 @@ public class GamePlayScreen{
         TARGET_Y = Integer.parseInt(gameProps.getProperty("gameplay.target.y"));
         MAX_FRAMES_X = Integer.parseInt(gameProps.getProperty("gameplay.maxFrames.x"));
         MAX_FRAMES_Y = Integer.parseInt(gameProps.getProperty("gameplay.maxFrames.y"));
+
+        TAXI_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.taxiHealth.x"));
+        DRIVER_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.driverHealth.x"));
+        TAXI_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.taxiHealth.y"));
+        DRIVER_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.driverHealth.y"));
+        //PASSENGER_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.x"));
+        //PASSENGER_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.y"));
+
 
         // current trip info vars
         TRIP_INFO_X = Integer.parseInt(gameProps.getProperty("gameplay.tripInfo.x"));
@@ -179,6 +191,7 @@ public class GamePlayScreen{
         }
         for (InvinciblePower invinciblePower : invinciblePowers) {
             invinciblePower.draw();
+
         }
 
         taxi.update(input);
@@ -186,7 +199,7 @@ public class GamePlayScreen{
 
         for (InvinciblePower invinciblePower : invinciblePowers) {
             invinciblePower.update(input.isDown(Keys.UP));
-            //invinciblePower.collide(taxi);  // Check for collision with taxi
+            invinciblePower.collide(taxi);  // Check for collision with taxi
             //invinciblePower.collide(driver);  // Check for collision with driver
         }
 
@@ -299,6 +312,16 @@ public class GamePlayScreen{
                 TARGET_Y);
         INFO_FONT.drawString(MSG_PROPS.getProperty("gamePlay.remFrames") + (MAX_FRAMES - currFrame), MAX_FRAMES_X,
                 MAX_FRAMES_Y);
+
+        // Display taxi, driver, and passenger health at the top right
+        INFO_FONT.drawString("TAXI " + String.format("%.2f", taxi.getHealth()), TAXI_HEALTH_X, TAXI_HEALTH_Y);
+        INFO_FONT.drawString("DRIVER " + String.format("%.2f", driver.getHealth()), DRIVER_HEALTH_X, DRIVER_HEALTH_Y);
+
+        // Check if taxi has a passenger
+
+        //INFO_FONT.drawString("PASSENGER " + String.format("%.2f", taxi.getTrip().getHealth()), 825, 125);
+
+
 
         if(coins.length > 0 && coins[0].getMaxFrames() != coinFramesActive) {
             INFO_FONT.drawString(String.valueOf(Math.round(coinFramesActive)), COIN_X, COIN_Y);

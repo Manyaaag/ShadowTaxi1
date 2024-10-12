@@ -8,6 +8,7 @@ public class Car implements Collidable{
 
     private final Properties PROPS;
     private final Image IMAGE;
+    protected final Image smokeImage;
     private final float RADIUS;
     private final float DAMAGE_POINTS;
     private final int COLLISION_TIMEOUT = 200;
@@ -24,6 +25,7 @@ public class Car implements Collidable{
         this.PROPS = props;
         int carType = new Random().nextInt(Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.types"))) + 1;
         this.IMAGE = new Image(String.format(PROPS.getProperty("gameObjects.otherCar.image"), carType));
+        this.smokeImage = new Image(String.format(PROPS.getProperty("gameObjects.smoke.image")));
         this.RADIUS = Float.parseFloat(PROPS.getProperty("gameObjects.otherCar.radius"));
         this.DAMAGE_POINTS = Float.parseFloat(PROPS.getProperty("gameObjects.otherCar.damage"));
         this.health = Float.parseFloat(PROPS.getProperty("gameObjects.otherCar.health"));
@@ -58,6 +60,23 @@ public class Car implements Collidable{
         if (!isDestroyed) {
             IMAGE.draw(x, y);
         }
+//        // Render fire if the health is 0 and fire timeout has not expired
+//        if (health <= 0) {
+//            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+//                System.out.println("Car Health: " + health + " - Rendering fire.");
+//                fireImage.draw(this.x, this.y);
+//                fireRenderTimeout++;
+//            }
+//        } else {
+//            // Always render the car (whether damaged or not)
+//            image.draw(this.x, this.y);
+//            // If the health is 50 or less, render smoke on top of the car
+//            if (health <= 50 && smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
+//                System.out.println("Car Health: " + health + " - Rendering smoke.");
+//                smokeImage.draw(this.x, this.y);
+//                smokeRenderTimeout++;
+//            }
+//        }
     }
 
 
@@ -138,6 +157,11 @@ public class Car implements Collidable{
         return RADIUS;
     }
 
+    @Override
+    public void setInvincible(int frames) {
+
+    }
+
     public int getX() {
         return x;
     }
@@ -178,8 +202,10 @@ public class Car implements Collidable{
             // Handle collision logic directly without calling another method
             if (!taxi.isDestroyed() && hasCollided((Collidable) taxi)) {
                 takeDamage(taxi.getDamage());
-                taxi.takeDamage(getDamage());
+                //taxi.takeDamage(getDamage());
+                taxi.takeDamage(DAMAGE_POINTS);
                 applyKnockback(taxi);
+                smokeImage.draw(this.x, this.y);
             }
         } else if (entity instanceof Car) {
             Car otherCar = (Car) entity;

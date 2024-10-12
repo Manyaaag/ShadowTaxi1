@@ -19,12 +19,16 @@ public class Taxi implements Collidable {
     private int y;
     private boolean isMovingY;
     private boolean isMovingX;
-    private boolean isInvincible;
+    public boolean isInvincible;
     protected final Trip[] TRIPS;
     private int tripCount;
     protected Coin coinPower;
     private Trip trip;
 
+    private static final int SMOKE_RENDER_TIMEOUT_FRAMES = 20;  // Smoke render duration
+    private static final int FIRE_RENDER_TIMEOUT_FRAMES = 20;
+    private int smokeRenderTimeout = 0;
+    private int fireRenderTimeout = 0;
     public Taxi(int x, int y, int maxTripCount, Properties props) {
         this.x = x;
         this.y = y;
@@ -34,6 +38,9 @@ public class Taxi implements Collidable {
         this.isDestroyed = false;
         this.collisionTimeout = 0;
         TRIPS = new Trip[maxTripCount];
+
+        this.collisionTimeout = 0;
+        this.smokeRenderTimeout = 0;
     }
 
     public int getX() {
@@ -52,8 +59,30 @@ public class Taxi implements Collidable {
         this.x = x;
     }
 
+    // Getter for health
+    public float getHealth() {
+        return health;
+    }
+
+    // Setter for health
+    public void setHealth(float health) {
+        this.health = health;
+        if (this.health <= 0) {
+            isDestroyed = true;
+            // Add logic here if you want to render fire or change the taxi image to 'damaged' when health reaches zero
+        }
+    }
+
+
     public float getRadius() {
         return RADIUS;
+    }
+
+
+    @Override
+    public void setInvincible(int frames) {
+        invincibilityFrames = frames;
+
     }
 
     public void update(Input input) {
@@ -79,7 +108,7 @@ public class Taxi implements Collidable {
             getTrip().end();
         }
 
-        draw();
+        //draw();
 
         // the flag of the current trip renders to the screen
         if(tripCount > 0) {
@@ -95,9 +124,9 @@ public class Taxi implements Collidable {
         if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
     }
 
-    public void draw() {
-        IMAGE.draw(x, y);
-    }
+//    public void draw() {
+//        IMAGE.draw(x, y);
+//    }
 
     public boolean isMovingY() {
         return isMovingY;
@@ -149,7 +178,32 @@ public class Taxi implements Collidable {
         coinPower = coin;
     }
 
-
+    public void draw() {
+        if (health <= 0) {
+            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+                System.out.println("Taxi Health: " + health + " - Rendering fire.");
+                Image fireImage = new Image("res/fire.png");
+                fireImage.draw(this.x, this.y);
+                fireRenderTimeout++;
+            }
+            Image damagedImage = new Image("res/taxiDamaged.png");
+            damagedImage.draw(this.x, this.y);
+        } else if (health < 50) {
+            if (smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
+                System.out.println("Taxi Health: " + health + " - Rendering smoke.");
+                Image damagedImage = new Image("res/taxiDamaged.png");
+                damagedImage.draw(this.x, this.y);
+                Image smokeImage = new Image("res/smoke.png");
+                smokeImage.draw(this.x, this.y);
+                smokeRenderTimeout++;
+            } else {
+                IMAGE.draw(this.x, this.y);
+            }
+        } else {
+            System.out.println("Taxi Health: " + health + " - Rendering normal taxi.");
+            IMAGE.draw(this.x, this.y);
+        }
+    }
 
 
 
@@ -195,7 +249,9 @@ public class Taxi implements Collidable {
             collideWithEnemyCar((EnemyCar) entity);
         } else if (entity instanceof Fireball) {
             collideWithFireball((Fireball) entity);
-        }
+        } //else if (entity instanceof InvinciblePower) {
+            //collidewithInvinciblePower((InvinciblePower) entity);
+        //}
     }
 
     // Method to handle collision with a Car
@@ -238,6 +294,9 @@ public class Taxi implements Collidable {
             // Render smoke effect here as well, if needed
         }
     }
+
+
+
 
 //    // Apply knockback effect for 10 frames when colliding with another car or enemy car
 //    private void applyKnockback(Object entity) {

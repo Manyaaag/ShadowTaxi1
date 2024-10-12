@@ -26,6 +26,11 @@ public class Trip {
         this.PROPS = props;
     }
 
+//    public float getHealth() {
+//        return PASSENGER.getHealth();  // Assumes passenger is not null
+//    }
+
+
     public Passenger getPassenger() {
         return PASSENGER;
     }

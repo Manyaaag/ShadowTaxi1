@@ -9,6 +9,7 @@ public interface Collidable {
     int getX();
     int getY();
     float getRadius();
+    void setInvincible(int frames);
 
 
 }

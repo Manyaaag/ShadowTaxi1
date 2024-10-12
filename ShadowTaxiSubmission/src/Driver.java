@@ -166,6 +166,18 @@ public class Driver {
     public int getY() {
         return y;
     }
+    // Getter for health
+    public float getHealth() {
+        return health;
+    }
+
+    // Setter for health
+    public void setHealth(int health) {
+        this.health = health;
+        if (this.health <= 0) {
+            // Implement logic to render blood effect here if needed
+        }
+    }
 
     public void updateWithTaxi(Input input, Taxi taxi) {
         // Update movement only if the driver is not in the taxi

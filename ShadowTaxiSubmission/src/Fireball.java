@@ -93,6 +93,11 @@ public class Fireball implements Collidable {
         return FIREBALL_RADIUS;
     }
 
+    @Override
+    public void setInvincible(int frames) {
+
+    }
+
     public int getX() {
         return x;
     }

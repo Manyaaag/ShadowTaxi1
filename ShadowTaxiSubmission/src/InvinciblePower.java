@@ -10,6 +10,8 @@ public class InvinciblePower {
     private int x, y;  // InvinciblePower's current coordinates
     private int activeFrames;  // Tracks how long the invincibility effect lasts
     private boolean isActive;
+    public boolean isCollided;
+    public boolean isCollected = false;
 
     public InvinciblePower(int x, int y, Properties props) {
         this.PROPS = props;
@@ -41,21 +43,36 @@ public class InvinciblePower {
     /**
      * Renders the Invincible Power on the screen.
      */
+//    public void draw() {
+//        IMAGE.draw(x, y);
+//    }
     public void draw() {
-        IMAGE.draw(x, y);
+        if (!isCollected) { // 3. Only draw if not collected
+            IMAGE.draw(x, y);
+        }
     }
 
     /**
-     * Checks for collision with Taxi or Driver, and activates invincibility if a collision occurs.
+     * Checks for collision with an entity and activates invincibility if a collision occurs.
      * @param entity The entity (Taxi or Driver) to check for collision.
-
-    public void collide(Entity entity) {
-        if (isCollidingWith(entity)) {
+     */
+    public void collide(Collidable entity) {
+        if (!isActive && isCollidingWith(entity)) {
             activate();
             entity.setInvincible(MAX_FRAMES);  // Make the entity invincible for MAX_FRAMES
         }
     }
+
+    /**
+     * Check if the invincibility power collides with the given entity.
+     * @param entity The entity to check collision with (Taxi, Driver, etc.).
+     * @return true if a collision occurs, false otherwise.
      */
+    private boolean isCollidingWith(Collidable entity) {
+        float distance = (float) Math.sqrt(Math.pow(this.x - entity.getX(), 2) + Math.pow(this.y - entity.getY(), 2));
+        return distance <= this.RADIUS + entity.getRadius();
+    }
+
 
     /**
      * Activate the invincibility power.
@@ -65,16 +82,12 @@ public class InvinciblePower {
         this.activeFrames = MAX_FRAMES;
     }
 
-    /**
-     * Check if the invincibility power collides with the given entity.
-     * @param entity The entity to check collision with (Taxi, Driver, etc.).
-     * @return true if a collision occurs, false otherwise.
-
-    private boolean isCollidingWith(Entity entity) {
-        float distance = (float) Math.sqrt(Math.pow(this.x - entity.getX(), 2) + Math.pow(this.y - entity.getY(), 2));
-        return distance <= this.RADIUS + entity.getRadius();
+    private void activatePower(Taxi taxi) {
+        taxi.setInvincible(MAX_FRAMES);  // Set taxi to be invincible for MAX_FRAMES
+        isActive = false;  // Deactivate the power-up after activation
     }
-     */
+
+
 
     /**
      * Getter for the invincibility status.
@@ -110,5 +123,42 @@ public class InvinciblePower {
     // Getter for radius
     public float getRadius() {
         return RADIUS;
+    }
+
+
+
+    /**
+     * Check if the coin has collided with any PowerCollectable objects, and power will be collected by PowerCollectable
+     * object that is collided with.
+     */
+
+//    public void collide(Taxi taxi) {
+//        if(hasCollidedWith(taxi)) {
+//            taxi.isInvincible = true;
+//            setIsCollided();
+//            //isActive = false;     // Stop rendering after collection
+//        }
+//    }
+    public void collide(Taxi taxi) {
+        if (!isCollected && hasCollidedWith(taxi)) { // Ensure it hasn't been collected
+            taxi.setInvincible(MAX_FRAMES);  // Set taxi to be invincible for MAX_FRAMES
+            isCollected = true; // 2. Mark as collected
+        }
+    }
+
+    public void setIsCollided() {
+        this.isCollided = true;
+    }
+
+    /**
+     * Check if the object is collided with another object based on the radius of the two objects.
+     * @param taxi The taxi object to be checked.
+     * @return True if the two objects are collided, false otherwise.
+     */
+    public boolean hasCollidedWith(Taxi taxi) {
+        // if the distance between the two objects is less than the sum of their radius, they are collided
+        float collisionDistance = RADIUS + taxi.getRadius();
+        float currDistance = (float) Math.sqrt(Math.pow(x - taxi.getX(), 2) + Math.pow(y - taxi.getY(), 2));
+        return currDistance <= collisionDistance;
     }
 }
