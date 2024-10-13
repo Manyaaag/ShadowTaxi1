@@ -9,26 +9,25 @@ public class Driver {
 
     private final Properties PROPS;
     private final Image IMAGE;
-    private final int DRIVER_INTAXI_RADIUS;
+
     private final float RADIUS;
     private final int WALK_SPEED_X;
     private final int WALK_SPEED_Y;
     private int x, y;  // Driver's current coordinates
     private int health;
-    private boolean inTaxi = true;
     private int moveY;
     private int walkDirectionX;
     private int walkDirectionY;
     private final int SPEED_Y;
 
+    public boolean inTaxi = true;
+    private final int DRIVER_INTAXI_RADIUS;
+    //private boolean isEjected = false;
+
+
     public Driver(int x, int y, Properties props) {
         this.PROPS = props;
-
-        // Load image, default to a placeholder if missing
-        //String driverImagePath = props.getProperty("gameObjects.driver.image", "default_image.png");
-       //this.IMAGE = new Image(driverImagePath);
         this.IMAGE = new Image(props.getProperty("gameObjects.driver.image"));
-
         // Parse properties with fallbacks
         this.WALK_SPEED_X = parseIntProperty(props, "gameObjects.driver.walkSpeedX", 2);
         this.WALK_SPEED_Y = parseIntProperty(props, "gameObjects.driver.walkSpeedY", 2);
@@ -94,21 +93,32 @@ public class Driver {
         }
     }
 
-    public void updateWithTaxi(Input input, Taxi taxi) {
-        // Update movement only if the driver is not in the taxi
-        if (!inTaxi) {
+
+    public void updateWithTaxi(Input input, Taxi newTaxi) {
+        if (!inTaxi) {  // Control driver movement only when outside the taxi
             if (input != null) {
                 adjustToInputMovement(input);
             }
+            walk();
 
-            move();
-            draw();
+            // Check if close enough to enter the new taxi
+            if (calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
+                enterTaxi(newTaxi);
+            } else {
+                draw();  // Draw the driver if outside the taxi
+            }
+
+            // Game loss condition: Driver goes out of bounds at top of screen
+            if (y < 0) {
+                System.out.println("Game Over: Driver moved out of bounds.");
+                // Implement game over logic here
+            }
         } else {
-            // Move with the taxi when inside
-            moveWithTaxi(taxi);
-            //System.out.println("Driver Health: " + health + " | Driver is inside the taxi.");
+            moveWithTaxi(newTaxi);  // Keep driver moving with the taxi when inside
         }
     }
+
+
 
     private void adjustToInputMovement(Input input) {
         if (input.wasPressed(Keys.UP)) {
@@ -147,6 +157,11 @@ public class Driver {
     private void walk() {
         x += WALK_SPEED_X * walkDirectionX;
         y += WALK_SPEED_Y * walkDirectionY;
+    }
+
+    private void enterTaxi(Taxi newTaxi) {
+        inTaxi = true;
+        newTaxi.activate();
     }
 
     public void moveWithTaxi(Taxi taxi) {

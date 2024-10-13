@@ -1,5 +1,4 @@
 
-
 import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
@@ -36,8 +35,10 @@ public class Taxi implements Collidable {
     private int fireRenderTimeout;
 
     private static boolean isNewTaxiCreated = false;
+    private boolean isNewTaxiActive = false; // Flag to control the new taxi after driver entry
     private Taxi newTaxiInstance = null;
     private Driver driver;
+    private boolean shouldScrollDamagedTaxi = false;
 
 
     public Taxi(int x, int y, int maxTripCount, Properties props) {
@@ -48,13 +49,10 @@ public class Taxi implements Collidable {
         this.IMAGE = new Image(props.getProperty("gameObjects.taxi.image"));
         this.RADIUS = Float.parseFloat(props.getProperty("gameObjects.taxi.radius"));
         this.isDestroyed = false;
-        this.collisionTimeout = 0;
         TRIPS = new Trip[maxTripCount];
-
         this.collisionTimeout = 0;
         this.smokeRenderTimeout = 0;
         this.fireRenderTimeout = 0;
-
     }
 
     public int getX() {
@@ -78,20 +76,9 @@ public class Taxi implements Collidable {
         return health;
     }
 
-    // Setter for health
-//    public void setHealth(float health) {
-//        this.health = health;
-//        if (this.health <= 0) {
-//            isDestroyed = true;
-//            // Add logic here if you want to render fire or change the taxi image to 'damaged' when health reaches zero
-//        }
-//    }
-
-
     public float getRadius() {
         return RADIUS;
     }
-
 
     @Override
     public void setInvincible(int frames) {
@@ -99,33 +86,48 @@ public class Taxi implements Collidable {
 
     }
 
+
+
+
     public void update(Input input, Driver driver) {
-
         this.driver = driver;
-        
-        if (health <= 0) {
+        if (health <= 0 ) {
             isDestroyed = true;
-
-            // Render damaged taxi and eject the driver once health is zero
-            drawDamagedTaxi();
+            drawDamagedTaxi(); // Render damaged taxi and spawn the new taxi
 
             if (!isNewTaxiCreated) {
                 stopAndEjectDriver(driver);
                 spawnNewTaxi(driver);  // Create the new taxi
                 isNewTaxiCreated = true;
             }
-        } else {
+        } else if (isNewTaxiCreated && isNewTaxiActive) {
+            if (input != null) newTaxiInstance.adjustToInputMovement(input);// Only applies to new taxi
+            newTaxiInstance.draw();
+        } else if (!isDestroyed && !isNewTaxiCreated) {
             // Normal taxi movement and rendering if not destroyed
-            if (input != null) adjustToInputMovement(input);
+            if (input != null) adjustToInputMovement(input); // For non-damaged taxi
             draw();
-        }
-
-        // Render the new taxi if it exists
-        if (newTaxiInstance != null) {
+        } else if (isNewTaxiCreated && !isNewTaxiActive) {
+            //if (input != null) newTaxiInstance.adjustToInputMovement(input);// Only applies to new taxi
             newTaxiInstance.draw();
         }
 
-
+        // Render the new taxi if it exists
+        if (newTaxiInstance != null && !isNewTaxiActive) {
+            newTaxiInstance.draw();
+        }
+        // Check if driver entered the new taxi
+        if (newTaxiInstance != null && driver.calculateDistance(newTaxiInstance) <= driver.getTaxiInRadius()) {
+            driver.setInTaxi(true);
+            isNewTaxiActive = true; // Enable control for new taxi
+            shouldScrollDamagedTaxi = false;
+        }
+        // Move damaged taxi down only if up arrow key is pressed
+        if (input != null && input.isDown(Keys.UP) && shouldScrollDamagedTaxi) {
+            y += 1;
+            if (y >= 768) shouldScrollDamagedTaxi = false;
+            drawDamagedTaxi();
+        }
 
         // if the taxi has coin power, apply the effect of the coin on the priority of the passenger
         // (See the logic in TravelPlan class)
@@ -141,15 +143,9 @@ public class Taxi implements Collidable {
             tp.setPriority(newPriority);
         }
 
-        //if(input != null) {
-            //adjustToInputMovement(input);
-        //}
-
         if(trip != null && trip.hasReachedEnd()) {
             getTrip().end();
         }
-
-        //draw();
 
         // the flag of the current trip renders to the screen
         if(tripCount > 0) {
@@ -159,33 +155,29 @@ public class Taxi implements Collidable {
             }
         }
 
-        //draw();
-
-
-        //if (input != null) adjustToInputMovement(input);
-        //if (!isDestroyed) draw();
-
         if (collisionTimeout > 0) collisionTimeout--;
         if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
     }
 
+    public void draw() {
+        if (health > 0 && !isDestroyed) {
+            IMAGE.draw(this.x, this.y);
+        }
+    }
+
+    public void activate() {
+        isNewTaxiActive = true;
+    }
+
 
     private void stopAndEjectDriver(Driver driver) {
-
-        //draw();
-        //drawDamagedTaxi();
-
         // Eject driver at (x - 50, y)
         driver.setX(this.x - 50);
         driver.setY(this.y);
         driver.setInTaxi(false);
-
-//        if (isDestroyed && !isNewTaxiCreated) {
-//            spawnNewTaxi(driver);
-//            isNewTaxiCreated = true;
-//        }
-
+        shouldScrollDamagedTaxi = true;
     }
+
     private void drawDamagedTaxi() {
         Image damagedImage = new Image("res/taxiDamaged.png");
         damagedImage.draw(this.x, this.y);
@@ -197,9 +189,6 @@ public class Taxi implements Collidable {
         }
     }
 
-//    public void draw() {
-//        IMAGE.draw(x, y);
-//    }
 
     public boolean isMovingY() {
         return isMovingY;
@@ -252,53 +241,10 @@ public class Taxi implements Collidable {
     }
 
 
-/*
-    // Method to draw or render taxi (modified for new taxi spawn logic)
-    public void draw() {
-        if (health <= 0) {
-            health = 0;
-
-            // Render damaged taxi image
-            Image damagedImage = new Image("res/taxiDamaged.png");
-            damagedImage.draw(this.x, this.y);
-
-            // Render fire for a limited duration
-            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
-                System.out.println("Taxi Health: " + health + " - Rendering fire.");
-                Image fireImage = new Image("res/fire.png");
-                fireImage.draw(this.x, this.y + (isMovingY ? fireRenderTimeout * 5 : 0)); // Moves down if up arrow pressed
-                fireRenderTimeout++;
-            }
-
-            // Check if no new taxi is on screen and create a new one
-            if (!isNewTaxiCreated) {
-                spawnNewTaxi(driver);
-                isNewTaxiCreated = true;
-            }
-        } else {
-            // Draw normal taxi
-            IMAGE.draw(this.x, this.y);
-        }
-        // Draw the new taxi if it exists
-        if (newTaxiInstance != null) {
-            newTaxiInstance.draw();
-        }
-    }
-
- */
-    public void draw() {
-        if (health > 0 && !isDestroyed) {
-            IMAGE.draw(this.x, this.y);
-        }
-
-
-    }
-
 
     // Method to spawn a new taxi at random coordinates
     private void spawnNewTaxi(Driver driver) {
         Random random = new Random();
-
         // Randomly select x-coordinate (either 360 or 620 for specified lanes)
         int newX = random.nextBoolean() ? 360 : 620;
         // Randomly select y-coordinate between 200 and 400
@@ -308,26 +254,13 @@ public class Taxi implements Collidable {
         newTaxiInstance = new Taxi(newX, newY, TRIPS.length, PROPS);
         //Taxi newTaxi = new Taxi(newX, newY, TRIPS.length, PROPS);
 
-
         // Logic to re-enter taxi if close enough
         if (driver.calculateDistance(newTaxiInstance) <= driver.getTaxiInRadius()) {
             driver.setInTaxi(true);
             driver.moveWithTaxi(newTaxiInstance);
         }
-        System.out.println("New Taxi Created at coordinates: (" + newX + ", " + newY + ")");
-
-
+        //System.out.println("New Taxi Created at coordinates: (" + newX + ", " + newY + ")");
     }
-
-
-
-
-
-
-
-
-
-
 
     public void takeDamage(float damage) {
         if (collisionTimeout == 0 && invincibilityFrames == 0) {
@@ -353,11 +286,6 @@ public class Taxi implements Collidable {
     public boolean isDestroyed() {
         return isDestroyed;
     }
-
-
-//    public boolean hasCollided() {
-//        //return collisionTimeout > 0;
-//    }
 
     public boolean hasCollided(Collidable entity) {
         if (entity == null) return false;
@@ -421,21 +349,6 @@ public class Taxi implements Collidable {
     }
 
 
-
-
-//    // Apply knockback effect for 10 frames when colliding with another car or enemy car
-//    private void applyKnockback(Object entity) {
-//        for (int i = 0; i < 10; i++) {
-//            if (this.y < entity.getY()) {
-//                this.y -= 1;
-//                entity.setY(entity.getY() + 1);
-//            } else {
-//                this.y += 1;
-//                entity.setY(entity.getY() - 1);
-//            }
-//        }
-//    }
-
     private void applyKnockback(Object entity) {
         for (int i = 0; i < 10; i++) {
             if (entity instanceof Taxi) {
@@ -483,6 +396,13 @@ public class Taxi implements Collidable {
         return totalEarnings;
     }
 
+    // Setter for health
+//    public void setHealth(float health) {
+//        this.health = health;
+//        if (this.health <= 0) {
+//            health = 0;
+//        }
+//    }
 
 }
 
