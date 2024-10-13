@@ -1,5 +1,8 @@
+
+//DO ENEMY CAR AND FIREBALL LAST
+
 import bagel.Image;
-import bagel.Input;
+
 import java.util.Properties;
 import java.util.Random;
 
@@ -20,10 +23,15 @@ public class EnemyCar {
     private boolean isDestroyed;
     public boolean invincible;
 
+    private final int FIRE_RENDER_TIMEOUT_FRAMES = 20;
+    private int fireRenderTimeout;
+
+
+
     public EnemyCar(Properties props) {
         this.PROPS = props;
 
-
+        this.fireRenderTimeout = 0;
         this.IMAGE = new Image(String.format(PROPS.getProperty("gameObjects.enemyCar.image")));
 
         // Get car properties
@@ -47,7 +55,7 @@ public class EnemyCar {
         this.y = yCoords[new Random().nextInt(yCoords.length)];
 
         // Initialize other properties
-        this.collisionTimeout = 0;
+        //this.collisionTimeout = 0;
         this.isColliding = false;
         this.isDestroyed = false;
     }
@@ -55,6 +63,12 @@ public class EnemyCar {
     /**
      * Updates the car's position and checks for collisions.
      */
+
+
+
+
+
+    /*
     public void update() {
         if (isDestroyed) {
             return;  // Do not update the car if it is destroyed
@@ -63,9 +77,14 @@ public class EnemyCar {
         // If the car is colliding, handle collision behavior
         if (collisionTimeout > 0) {
             collisionTimeout--;
-            if (collisionTimeout <= COLLISION_KNOCKBACK_FRAMES) {
-                // Knockback logic - move the car away from the collided object
-                y += speedY * (collisionTimeout > 0 ? -1 : 1);
+//            if (collisionTimeout <= COLLISION_KNOCKBACK_FRAMES) {
+//                // Knockback logic - move the car away from the collided object
+//                y += speedY * (collisionTimeout > 0 ? -1 : 1);
+//            }
+
+            // Apply knockback effect only during the first COLLISION_KNOCKBACK_FRAMES
+            if (collisionTimeout > COLLISION_TIMEOUT - COLLISION_KNOCKBACK_FRAMES) {
+                y += speedY > 0 ? -1 : 1;  // Move up or down based on speed direction
             }
             if (collisionTimeout == 0) {
                 // After collision timeout, reset the speedY
@@ -73,6 +92,26 @@ public class EnemyCar {
             }
         } else {
             // Normal movement, move the car vertically upwards
+            y -= speedY;
+        }
+    }
+
+     */
+
+
+
+    public void update() {
+        if (isDestroyed) return;
+
+        if (collisionTimeout > 0) {
+            collisionTimeout--;
+            if (collisionTimeout <= COLLISION_KNOCKBACK_FRAMES) {
+                y += speedY * (collisionTimeout > 0 ? -1 : 1);
+            }
+            if (collisionTimeout == 0) {
+                resetSpeed();
+            }
+        } else {
             y -= speedY;
         }
     }
@@ -85,6 +124,22 @@ public class EnemyCar {
             IMAGE.draw(x, y);
         }
     }
+
+    private void applyKnockback(Object entity) {
+        if (entity instanceof Taxi) {
+            Taxi taxi = (Taxi) entity;
+            for (int i = 0; i < 10; i++) {
+                if (this.y < taxi.getY()) {
+                    this.y -= 1;
+                    taxi.setY(taxi.getY() + 1);
+                } else {
+                    this.y += 1;
+                    taxi.setY(taxi.getY() - 1);
+                }
+            }
+        }
+    }
+
 
     /**
      * Handles collision with other game objects.
@@ -113,31 +168,44 @@ public class EnemyCar {
 
         if (entity instanceof Taxi) {
             Taxi taxi = (Taxi) entity;
-            float entityDamage = taxi.getDamage();
-            takeDamage(entityDamage);
-            taxi.takeDamage(DAMAGE_POINTS);
+            //if (this.hasCollided(taxi)) {  // Ensure this check is accurate
+            if (!taxi.isDestroyed() && hasCollided((Collidable) taxi)) {
+                float entityDamage = taxi.getDamage();
+                takeDamage(entityDamage);
+                applyKnockback(taxi);
+                taxi.takeDamage(DAMAGE_POINTS);
+                collisionTimeout = COLLISION_TIMEOUT;
+            }
+        //collisionTimeout = COLLISION_TIMEOUT; // Reset collision timeout
+//            float entityDamage = taxi.getDamage();
+//            takeDamage(entityDamage);
+//            /////isDestroyed = true;
+//            taxi.takeDamage(DAMAGE_POINTS*100);
 
         } else if (entity instanceof Car) {
             Car car = (Car) entity;
             float entityDamage = car.getDamage();
             takeDamage(entityDamage);
             car.takeDamage(DAMAGE_POINTS);
+            collisionTimeout = COLLISION_TIMEOUT;
 
         } else if (entity instanceof EnemyCar) {
             EnemyCar enemyCar = (EnemyCar) entity;
             float entityDamage = enemyCar.getDamage();
             takeDamage(entityDamage);
             enemyCar.takeDamage(DAMAGE_POINTS);
+            collisionTimeout = COLLISION_TIMEOUT;
 
         } else if (entity instanceof Fireball) {
             Fireball fireball = (Fireball) entity;
             float entityDamage = fireball.getDamage();
             takeDamage(entityDamage);
+            collisionTimeout = COLLISION_TIMEOUT;
             //fireball.takeDamage(DAMAGE_POINTS);
         }
 
         // Start collision timeout
-        collisionTimeout = COLLISION_TIMEOUT;
+        //collisionTimeout = COLLISION_TIMEOUT;
     }
 
 
@@ -151,6 +219,13 @@ public class EnemyCar {
         health -= damage;
         if (health <= 0) {
             isDestroyed = true;
+            fireRenderTimeout = 0;
+//            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+//                System.out.println("hi");
+//                Image fireImage = new Image("res/fire.png");
+//                fireImage.draw(this.x, this.y);
+//                fireRenderTimeout++;
+//            }
             // Render fire effect or similar visual indicator (not implemented here)
         }
     }
@@ -159,8 +234,8 @@ public class EnemyCar {
      * Resets the car's speed after a collision.
      */
     private void resetSpeed() {
-        int minSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.minSpeedY"));
-        int maxSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.maxSpeedY"));
+        int minSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.enemyCar.minSpeedY"));
+        int maxSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.enemyCar.maxSpeedY"));
         this.speedY = new Random().nextInt(maxSpeedY - minSpeedY + 1) + minSpeedY;
     }
 

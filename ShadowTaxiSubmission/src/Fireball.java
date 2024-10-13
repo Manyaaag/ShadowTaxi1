@@ -1,3 +1,4 @@
+
 import bagel.Image;
 import java.util.Properties;
 
@@ -40,10 +41,13 @@ public class Fireball implements Collidable {
     /**
      * Renders the fireball on the screen.
      */
+//    public void draw() {
+//        if (!isDestroyed) {
+//            FIREBALL_IMAGE.draw(x, y);
+//        }
+//    }
     public void draw() {
-        if (!isDestroyed) {
-            FIREBALL_IMAGE.draw(x, y);
-        }
+        FIREBALL_IMAGE.draw(x, y);
     }
 
     /**

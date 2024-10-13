@@ -234,14 +234,17 @@ public class Taxi implements Collidable {
 
     public void draw() {
         if (health <= 0) {
+            health = 0;
+
+            Image damagedImage = new Image("res/taxiDamaged.png");
+            damagedImage.draw(this.x, this.y);
             if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
                 System.out.println("Taxi Health: " + health + " - Rendering fire.");
                 Image fireImage = new Image("res/fire.png");
                 fireImage.draw(this.x, this.y);
                 fireRenderTimeout++;
             }
-            Image damagedImage = new Image("res/taxiDamaged.png");
-            damagedImage.draw(this.x, this.y);
+
         } else if (health < 50) {
             if (smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
                 System.out.println("Taxi Health: " + health + " - Rendering smoke.");
