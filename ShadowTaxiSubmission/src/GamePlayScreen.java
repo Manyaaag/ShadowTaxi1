@@ -216,7 +216,7 @@ public class GamePlayScreen{
 
         }
 
-        taxi.update(input);
+        taxi.update(input,driver);
         driver.updateWithTaxi(input, taxi);
 
         for (InvinciblePower invinciblePower : invinciblePowers) {

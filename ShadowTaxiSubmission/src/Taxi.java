@@ -5,7 +5,11 @@ import bagel.Input;
 import bagel.Keys;
 import java.util.Properties;
 
+import java.util.Random;
+
 public class Taxi implements Collidable {
+
+    private final Properties PROPS;
     private final Image IMAGE;
     private final int SPEED_X;
     private final float RADIUS;
@@ -31,8 +35,13 @@ public class Taxi implements Collidable {
     private int smokeRenderTimeout;
     private int fireRenderTimeout;
 
+    private static boolean isNewTaxiCreated = false;
+    private Taxi newTaxiInstance = null;
+    private Driver driver;
+
 
     public Taxi(int x, int y, int maxTripCount, Properties props) {
+        this.PROPS = props;
         this.x = x;
         this.y = y;
         this.SPEED_X = Integer.parseInt(props.getProperty("gameObjects.taxi.speedX"));
@@ -90,7 +99,34 @@ public class Taxi implements Collidable {
 
     }
 
-    public void update(Input input) {
+    public void update(Input input, Driver driver) {
+
+        this.driver = driver;
+        
+        if (health <= 0) {
+            isDestroyed = true;
+
+            // Render damaged taxi and eject the driver once health is zero
+            drawDamagedTaxi();
+
+            if (!isNewTaxiCreated) {
+                stopAndEjectDriver(driver);
+                spawnNewTaxi(driver);  // Create the new taxi
+                isNewTaxiCreated = true;
+            }
+        } else {
+            // Normal taxi movement and rendering if not destroyed
+            if (input != null) adjustToInputMovement(input);
+            draw();
+        }
+
+        // Render the new taxi if it exists
+        if (newTaxiInstance != null) {
+            newTaxiInstance.draw();
+        }
+
+
+
         // if the taxi has coin power, apply the effect of the coin on the priority of the passenger
         // (See the logic in TravelPlan class)
         if (trip != null && coinPower != null) {
@@ -105,9 +141,9 @@ public class Taxi implements Collidable {
             tp.setPriority(newPriority);
         }
 
-        if(input != null) {
-            adjustToInputMovement(input);
-        }
+        //if(input != null) {
+            //adjustToInputMovement(input);
+        //}
 
         if(trip != null && trip.hasReachedEnd()) {
             getTrip().end();
@@ -123,11 +159,42 @@ public class Taxi implements Collidable {
             }
         }
 
+        //draw();
+
+
         //if (input != null) adjustToInputMovement(input);
         //if (!isDestroyed) draw();
-        draw();
+
         if (collisionTimeout > 0) collisionTimeout--;
         if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
+    }
+
+
+    private void stopAndEjectDriver(Driver driver) {
+
+        //draw();
+        //drawDamagedTaxi();
+
+        // Eject driver at (x - 50, y)
+        driver.setX(this.x - 50);
+        driver.setY(this.y);
+        driver.setInTaxi(false);
+
+//        if (isDestroyed && !isNewTaxiCreated) {
+//            spawnNewTaxi(driver);
+//            isNewTaxiCreated = true;
+//        }
+
+    }
+    private void drawDamagedTaxi() {
+        Image damagedImage = new Image("res/taxiDamaged.png");
+        damagedImage.draw(this.x, this.y);
+
+        if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+            Image fireImage = new Image("res/fire.png");
+            fireImage.draw(this.x, this.y + fireRenderTimeout * 5);
+            fireRenderTimeout++;
+        }
     }
 
 //    public void draw() {
@@ -185,82 +252,74 @@ public class Taxi implements Collidable {
     }
 
 
-
-
 /*
-    public void draw() {
-        // Case when health is zero or below: render fire and damaged image
-        if (health <= 0) {
-            health = 0;  // Clamp health to zero
-            isDestroyed = true;
-
-            // Render fire image for a limited duration
-            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
-                //System.out.println("Taxi Health: " + health + " - Rendering fire.");
-                Image fireImage = new Image("res/fire.png");
-                fireImage.draw(this.x, this.y);
-                fireRenderTimeout++;
-
-            }
-
-
-            // Always render damaged image if health is zero
-            Image damagedImage = new Image("res/taxiDamaged.png");
-            damagedImage.draw(this.x, this.y);
-            //fireRenderTimeout = 0;
-        }
-
-        // Case when health is low but above zero: render smoke and damaged image
-//        else if (health < 50) {
-//            if (smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
-//                System.out.println("Taxi Health: " + health + " - Rendering smoke.");
-//                Image smokeImage = new Image("res/smoke.png");
-//                smokeImage.draw(this.x, this.y);
-//                smokeRenderTimeout++;
-//            }
-//
-//            // Render damaged taxi if health is below 50
-//            Image damagedImage = new Image("res/taxiDamaged.png");
-//            damagedImage.draw(this.x, this.y);
-//        }
-        // Normal rendering when health is above 50
-        else {
-            System.out.println("Taxi Health: " + health + " - Rendering normal taxi.");
-            IMAGE.draw(this.x, this.y);
-        }
-    }
-
- */
-
+    // Method to draw or render taxi (modified for new taxi spawn logic)
     public void draw() {
         if (health <= 0) {
             health = 0;
 
+            // Render damaged taxi image
             Image damagedImage = new Image("res/taxiDamaged.png");
             damagedImage.draw(this.x, this.y);
+
+            // Render fire for a limited duration
             if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
                 System.out.println("Taxi Health: " + health + " - Rendering fire.");
                 Image fireImage = new Image("res/fire.png");
-                fireImage.draw(this.x, this.y);
+                fireImage.draw(this.x, this.y + (isMovingY ? fireRenderTimeout * 5 : 0)); // Moves down if up arrow pressed
                 fireRenderTimeout++;
             }
 
-        } else if (health < 50) {
-            if (smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
-                System.out.println("Taxi Health: " + health + " - Rendering smoke.");
-                Image damagedImage = new Image("res/taxiDamaged.png");
-                damagedImage.draw(this.x, this.y);
-                Image smokeImage = new Image("res/smoke.png");
-                smokeImage.draw(this.x, this.y);
-                smokeRenderTimeout++;
-            } else {
-                IMAGE.draw(this.x, this.y);
+            // Check if no new taxi is on screen and create a new one
+            if (!isNewTaxiCreated) {
+                spawnNewTaxi(driver);
+                isNewTaxiCreated = true;
             }
         } else {
-            System.out.println("Taxi Health: " + health + " - Rendering normal taxi.");
+            // Draw normal taxi
             IMAGE.draw(this.x, this.y);
         }
+        // Draw the new taxi if it exists
+        if (newTaxiInstance != null) {
+            newTaxiInstance.draw();
+        }
     }
+
+ */
+    public void draw() {
+        if (health > 0 && !isDestroyed) {
+            IMAGE.draw(this.x, this.y);
+        }
+
+
+    }
+
+
+    // Method to spawn a new taxi at random coordinates
+    private void spawnNewTaxi(Driver driver) {
+        Random random = new Random();
+
+        // Randomly select x-coordinate (either 360 or 620 for specified lanes)
+        int newX = random.nextBoolean() ? 360 : 620;
+        // Randomly select y-coordinate between 200 and 400
+        int newY = random.nextInt(201) + 200;
+
+        // Initialize the new taxi with randomized coordinates
+        newTaxiInstance = new Taxi(newX, newY, TRIPS.length, PROPS);
+        //Taxi newTaxi = new Taxi(newX, newY, TRIPS.length, PROPS);
+
+
+        // Logic to re-enter taxi if close enough
+        if (driver.calculateDistance(newTaxiInstance) <= driver.getTaxiInRadius()) {
+            driver.setInTaxi(true);
+            driver.moveWithTaxi(newTaxiInstance);
+        }
+        System.out.println("New Taxi Created at coordinates: (" + newX + ", " + newY + ")");
+
+
+    }
+
+
 
 
 
@@ -281,6 +340,7 @@ public class Taxi implements Collidable {
             collisionTimeout = 200;
         }
     }
+
 
     public void activateInvincibility() {
         invincibilityFrames = 1000; // Makes taxi invincible for 1000 frames
