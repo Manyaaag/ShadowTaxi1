@@ -116,6 +116,22 @@ public class Taxi implements Collidable {
 
         }
 
+        // Handle driver movement and taxi control transfer
+        if (isNewTaxiCreated && newTaxiInstance != null) {
+            System.out.println("Passing newTaxiInstance to driver");
+            driver.updateWithTaxi(input, newTaxiInstance);  // Pass new taxi instance to driver
+            if (isNewTaxiActive) {
+                newTaxiInstance.adjustToInputMovement(input);  // Allow movement for new taxi
+            }
+            newTaxiInstance.draw();
+        } else if (!isDestroyed) {
+            adjustToInputMovement(input);  // Allow original taxi movement
+            draw();
+        }
+
+
+
+        /*
         // Case 3: The new taxi is created and active (driver inside)
         if (isNewTaxiCreated && isNewTaxiActive) {
             if (input != null) {
@@ -132,6 +148,8 @@ public class Taxi implements Collidable {
             }
             draw();
         }
+
+         */
 
         // Move the damaged taxi downward only if up arrow key is pressed
         if (shouldScrollDamagedTaxi && input != null && input.isDown(Keys.UP)) {

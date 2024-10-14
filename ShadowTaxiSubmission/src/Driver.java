@@ -103,16 +103,19 @@ public class Driver {
 
 
     public void updateWithTaxi(Input input, Taxi newTaxi) {
+        System.out.println("Driver updateWithTaxi called");
         if (!inTaxi) {  // Control driver movement only when outside the taxi
             if (input != null) {
                 adjustToInputMovement(input);
             }
             walk();
 
-
+            System.out.println("Checking distance to new taxi...");
 
             // Check if close enough to enter the new taxi
-            if (!newTaxi.isOriginalTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {    //currDistance <= DRIVER_INTAXI_RADIUS
+            if (!newTaxi.isOriginalTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
+                System.out.println("Within radius of new taxi, attempting to enter...");
+
                 enterTaxi(newTaxi);
                 //inTaxi = true;
                 //moveWithTaxi(newTaxi);
@@ -177,7 +180,7 @@ public class Driver {
 
     public void enterTaxi(Taxi newTaxi) {
         System.out.println("attempting to enter taxi");
-        if (!inTaxi && !newTaxi.isOriginalTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
+        if (!inTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
             System.out.println("Driver is now entering the taxi.");  // Debug log
 
             inTaxi = true;
@@ -198,6 +201,7 @@ public class Driver {
 //        int dx = this.x - newTaxi.getX();
 //        int dy = this.y - newTaxi.getY();
 //        return Math.sqrt(dx * dx + dy * dy);
+        System.out.println("Distance to new taxi: " + currDistance);
         return currDistance;
 
     }
