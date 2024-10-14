@@ -21,6 +21,7 @@ public class Driver {
     private final int SPEED_Y;
 
     public boolean inTaxi = true;
+    public boolean inNewTaxi = false;
     private final int DRIVER_INTAXI_RADIUS;
 
 
@@ -85,6 +86,9 @@ public class Driver {
 
     public void setInTaxi(boolean inTaxi) {
         this.inTaxi = inTaxi;
+    }
+    public void setInNewTaxi(boolean inNewTaxi) {
+        this.inNewTaxi = inNewTaxi;
 
     }
 
@@ -108,7 +112,7 @@ public class Driver {
 
 
             // Check if close enough to enter the new taxi
-            if (calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {    //currDistance <= DRIVER_INTAXI_RADIUS
+            if (!newTaxi.isOriginalTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {    //currDistance <= DRIVER_INTAXI_RADIUS
                 enterTaxi(newTaxi);
                 //inTaxi = true;
                 //moveWithTaxi(newTaxi);
@@ -173,12 +177,14 @@ public class Driver {
 
     public void enterTaxi(Taxi newTaxi) {
         System.out.println("attempting to enter taxi");
-        if (!inTaxi && Math.sqrt(Math.pow(newTaxi.getX() - x, 2) + Math.pow(newTaxi.getY() - y, 2)) <= 1) {
+        if (!inTaxi && !newTaxi.isOriginalTaxi && calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
             System.out.println("Driver is now entering the taxi.");  // Debug log
+
+            inTaxi = true;
+            inNewTaxi = true;
+            newTaxi.activate();
+            moveWithTaxi(newTaxi);
         }
-        inTaxi = true;
-        newTaxi.activate();
-        moveWithTaxi(newTaxi);
     }
 
     public void moveWithTaxi(Taxi taxi) {

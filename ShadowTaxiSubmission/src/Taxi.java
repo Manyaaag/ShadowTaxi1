@@ -40,6 +40,9 @@ public class Taxi implements Collidable {
     private Driver driver;
     private boolean shouldScrollDamagedTaxi = false;
 
+    public boolean isOriginalTaxi;
+
+
 
     public Taxi(int x, int y, int maxTripCount, Properties props) {
         this.PROPS = props;
@@ -53,6 +56,8 @@ public class Taxi implements Collidable {
         this.collisionTimeout = 0;
         this.smokeRenderTimeout = 0;
         this.fireRenderTimeout = 0;
+
+        this.isOriginalTaxi = true;
     }
 
     public int getX() {
@@ -121,7 +126,7 @@ public class Taxi implements Collidable {
         }
 
         // Case 4: The original taxi is not destroyed, and a new taxi hasn't been created
-        if (!isDestroyed && !isNewTaxiCreated) {
+        else if (!isDestroyed && !isNewTaxiCreated) {
             if (input != null) {
                 adjustToInputMovement(input); // Allow movement of the original taxi
             }
@@ -166,79 +171,6 @@ public class Taxi implements Collidable {
         if (invincibilityFrames > 0) invincibilityFrames--;
     }
 
-
-/*
-    public void update(Input input, Driver driver) {
-        this.driver = driver;
-        if (health <= 0 ) {
-            isDestroyed = true;
-            drawDamagedTaxi(); // Render damaged taxi and spawn the new taxi
-
-            if (!isNewTaxiCreated) {
-                stopAndEjectDriver(driver);
-                spawnNewTaxi(driver);  // Create the new taxi
-                isNewTaxiCreated = true;
-            }
-        } else if (isNewTaxiCreated && isNewTaxiActive) {
-            if (input != null) newTaxiInstance.adjustToInputMovement(input);// Only applies to new taxi
-            newTaxiInstance.draw();
-        } else if (!isDestroyed && !isNewTaxiCreated) {
-            // Normal taxi movement and rendering if not destroyed
-            if (input != null) adjustToInputMovement(input); // For non-damaged taxi
-            draw();
-        } else if (isNewTaxiCreated && !isNewTaxiActive) {
-            //if (input != null) newTaxiInstance.adjustToInputMovement(input);// Only applies to new taxi
-            newTaxiInstance.draw();
-        }
-
-        // Render the new taxi if it exists
-        if (newTaxiInstance != null && !isNewTaxiActive) {
-            newTaxiInstance.draw();
-        }
-        // Check if driver entered the new taxi
-        if (newTaxiInstance != null && driver.calculateDistance(newTaxiInstance) <= driver.getTaxiInRadius()) {
-            driver.setInTaxi(true);
-            isNewTaxiActive = true; // Enable control for new taxi
-            //shouldScrollDamagedTaxi = false;  /////CHECK
-        }
-        // Move damaged taxi down only if up arrow key is pressed
-        if (input != null && input.isDown(Keys.UP) && shouldScrollDamagedTaxi) {
-            y += 1;
-            //if (y >= 768) shouldScrollDamagedTaxi = false;
-            drawDamagedTaxi();
-        }
-
-        // if the taxi has coin power, apply the effect of the coin on the priority of the passenger
-        // (See the logic in TravelPlan class)
-        if (trip != null && coinPower != null) {
-            TravelPlan tp = trip.getPassenger().getTravelPlan();
-            int newPriority = tp.getPriority();
-            if(!tp.getCoinPowerApplied()) {
-                newPriority = coinPower.applyEffect(tp.getPriority());
-            }
-            if(newPriority < tp.getPriority()) {
-                tp.setCoinPowerApplied();
-            }
-            tp.setPriority(newPriority);
-        }
-
-        if(trip != null && trip.hasReachedEnd()) {
-            getTrip().end();
-        }
-
-        // the flag of the current trip renders to the screen
-        if(tripCount > 0) {
-            Trip lastTrip = TRIPS[tripCount - 1];
-            if(!lastTrip.getPassenger().hasReachedFlag()) {
-                lastTrip.getTripEndFlag().update(input);
-            }
-        }
-
-        if (collisionTimeout > 0) collisionTimeout--;
-        if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
-    }
-
- */
 
     public void draw() {
         if (health > 0 && !isDestroyed) {
@@ -301,26 +233,26 @@ public class Taxi implements Collidable {
         return TRIPS[tripCount - 1];
     }
 
-        public void adjustToInputMovement(Input input) {
-            if (isNewTaxiCreated && !isNewTaxiActive) {
-                return;
-            } else {
-                if (input.wasPressed(Keys.UP)) {
-                    isMovingY = true;
-                } else if (input.wasReleased(Keys.UP)) {
-                    isMovingY = false;
-                } else if (input.isDown(Keys.LEFT)) {
-                    x -= SPEED_X;
-                    isMovingX = true;
-                } else if (input.isDown(Keys.RIGHT)) {
-                    x += SPEED_X;
-                    isMovingX = true;
-                } else if (input.wasReleased(Keys.LEFT) || input.wasReleased(Keys.RIGHT)) {
-                    isMovingX = false;
-                }
+    public void adjustToInputMovement(Input input) {
+        if (isNewTaxiCreated && !isNewTaxiActive) {
+            return;
+        } else {
+            if (input.wasPressed(Keys.UP)) {
+                isMovingY = true;
+            } else if (input.wasReleased(Keys.UP)) {
+                isMovingY = false;
+            } else if (input.isDown(Keys.LEFT)) {
+                x -= SPEED_X;
+                isMovingX = true;
+            } else if (input.isDown(Keys.RIGHT)) {
+                x += SPEED_X;
+                isMovingX = true;
+            } else if (input.wasReleased(Keys.LEFT) || input.wasReleased(Keys.RIGHT)) {
+                isMovingX = false;
             }
-
         }
+
+    }
 
     public void collectPower(Coin coin) {
         coinPower = coin;
@@ -338,6 +270,7 @@ public class Taxi implements Collidable {
 
         // Initialize the new taxi with randomized coordinates
         newTaxiInstance = new Taxi(newX, newY, TRIPS.length, PROPS);
+        newTaxiInstance.isOriginalTaxi = false;
         //Taxi newTaxi = new Taxi(newX, newY, TRIPS.length, PROPS);
 
         // Logic to re-enter taxi if close enough
@@ -389,7 +322,7 @@ public class Taxi implements Collidable {
         } else if (entity instanceof Fireball) {
             collideWithFireball((Fireball) entity);
         } //else if (entity instanceof InvinciblePower) {
-            //collidewithInvinciblePower((InvinciblePower) entity);
+        //collidewithInvinciblePower((InvinciblePower) entity);
         //}
     }
 
@@ -491,5 +424,3 @@ public class Taxi implements Collidable {
 //    }
 
 }
-
-
