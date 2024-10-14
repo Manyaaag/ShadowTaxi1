@@ -116,16 +116,20 @@ public class Taxi implements Collidable {
 
         }
 
-        // Handle driver movement and taxi control transfer
-        if (isNewTaxiCreated && newTaxiInstance != null) {
-            System.out.println("Passing newTaxiInstance to driver");
-            driver.updateWithTaxi(input, newTaxiInstance);  // Pass new taxi instance to driver
-            if (isNewTaxiActive) {
-                newTaxiInstance.adjustToInputMovement(input);  // Allow movement for new taxi
-            }
+        // Case 1: Control the new taxi once it’s active
+        if (isNewTaxiCreated && isNewTaxiActive && newTaxiInstance != null) {
+            System.out.println("Controlling new taxi...");
+            newTaxiInstance.adjustToInputMovement(input);  // Allow movement for new taxi
             newTaxiInstance.draw();
-        } else if (!isDestroyed) {
-            adjustToInputMovement(input);  // Allow original taxi movement
+        }
+        // Case 2: Driver has not yet entered new taxi
+        else if (isNewTaxiCreated && !isNewTaxiActive) {
+            driver.updateWithTaxi(input, newTaxiInstance);  // Allow driver movement towards new taxi
+            newTaxiInstance.draw();
+        }
+        // Case 3: Control the original taxi if not destroyed and new taxi doesn’t exist
+        else if (!isDestroyed && !isNewTaxiCreated) {
+            adjustToInputMovement(input);
             draw();
         }
 
@@ -198,6 +202,7 @@ public class Taxi implements Collidable {
 
     public void activate() {
         isNewTaxiActive = true;
+        System.out.println("New taxi now active");
     }
 
 
@@ -254,7 +259,7 @@ public class Taxi implements Collidable {
     public void adjustToInputMovement(Input input) {
         if (isNewTaxiCreated && !isNewTaxiActive) {
             return;
-        } else {
+        } else if (isNewTaxiActive || !isDestroyed) {
             if (input.wasPressed(Keys.UP)) {
                 isMovingY = true;
             } else if (input.wasReleased(Keys.UP)) {
@@ -310,6 +315,8 @@ public class Taxi implements Collidable {
             collisionTimeout = 200;
         }
     }
+
+
 
 
     public void activateInvincibility() {

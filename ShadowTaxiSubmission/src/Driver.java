@@ -103,7 +103,7 @@ public class Driver {
 
 
     public void updateWithTaxi(Input input, Taxi newTaxi) {
-        System.out.println("Driver updateWithTaxi called");
+
         if (!inTaxi) {  // Control driver movement only when outside the taxi
             if (input != null) {
                 adjustToInputMovement(input);
