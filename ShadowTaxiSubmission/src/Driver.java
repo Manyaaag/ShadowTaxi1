@@ -22,7 +22,7 @@ public class Driver {
 
     public boolean inTaxi = true;
     private final int DRIVER_INTAXI_RADIUS;
-    //private boolean isEjected = false;
+
 
 
     public Driver(int x, int y, Properties props) {
@@ -69,9 +69,11 @@ public class Driver {
     public void setX(int x) {
         this.x = x;
     }
+
     public void setY(int y) {
         this.y = y;
     }
+
     public int getTaxiInRadius() {
         return DRIVER_INTAXI_RADIUS;
     }
@@ -80,8 +82,10 @@ public class Driver {
     public float getHealth() {
         return health;
     }
+
     public void setInTaxi(boolean inTaxi) {
         this.inTaxi = inTaxi;
+
     }
 
 
@@ -101,9 +105,13 @@ public class Driver {
             }
             walk();
 
+
+
             // Check if close enough to enter the new taxi
-            if (calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {
+            if (calculateDistance(newTaxi) <= DRIVER_INTAXI_RADIUS) {    //currDistance <= DRIVER_INTAXI_RADIUS
                 enterTaxi(newTaxi);
+                //inTaxi = true;
+                //moveWithTaxi(newTaxi);
             } else {
                 draw();  // Draw the driver if outside the taxi
             }
@@ -114,10 +122,10 @@ public class Driver {
                 // Implement game over logic here
             }
         } else {
+            //moveWithTaxi(taxi);
             moveWithTaxi(newTaxi);  // Keep driver moving with the taxi when inside
         }
     }
-
 
 
     private void adjustToInputMovement(Input input) {
@@ -142,6 +150,8 @@ public class Driver {
         } else {
             walkDirectionY = 0;
         }
+        //System.out.println("Current Walk Directions -> X: " + walkDirectionX + " Y: " + walkDirectionY);
+
     }
 
     private void move() {
@@ -153,15 +163,22 @@ public class Driver {
     }
 
 
-
     private void walk() {
         x += WALK_SPEED_X * walkDirectionX;
         y += WALK_SPEED_Y * walkDirectionY;
+
+        //System.out.println("Driver Position -> X: " + x + " Y: " + y);  // Debug for position
+
     }
 
-    private void enterTaxi(Taxi newTaxi) {
+    public void enterTaxi(Taxi newTaxi) {
+        System.out.println("attempting to enter taxi");
+        if (!inTaxi && Math.sqrt(Math.pow(newTaxi.getX() - x, 2) + Math.pow(newTaxi.getY() - y, 2)) <= 1) {
+            System.out.println("Driver is now entering the taxi.");  // Debug log
+        }
         inTaxi = true;
         newTaxi.activate();
+        moveWithTaxi(newTaxi);
     }
 
     public void moveWithTaxi(Taxi taxi) {
@@ -169,9 +186,21 @@ public class Driver {
         y = taxi.getY();
     }
 
-    public double calculateDistance(Taxi taxi) {
-        int dx = this.x - taxi.getX();
-        int dy = this.y - taxi.getY();
-        return Math.sqrt(dx * dx + dy * dy);
+    public double calculateDistance(Taxi newTaxi) {
+
+        float currDistance = (float) Math.sqrt(Math.pow(newTaxi.getX() - x, 2) + Math.pow(newTaxi.getY() - y, 2));
+//        int dx = this.x - newTaxi.getX();
+//        int dy = this.y - newTaxi.getY();
+//        return Math.sqrt(dx * dx + dy * dy);
+        return currDistance;
+
     }
+
+
+
+
+    //float currDistance = (float) Math.sqrt(Math.pow(taxi.getX() - x, 2) + Math.pow(taxi.getY() - y, 2));
+    //return currDistance <= TAXI_DETECT_RADIUS
+
+
 }

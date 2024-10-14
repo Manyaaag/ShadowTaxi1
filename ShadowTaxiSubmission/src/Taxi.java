@@ -86,9 +86,88 @@ public class Taxi implements Collidable {
 
     }
 
+    public void update(Input input, Driver driver) {
+        this.driver = driver;
+
+        // Case 1: The original taxi is destroyed, triggering new taxi creation
+        if (health <= 0) {
+            isDestroyed = true;
+            drawDamagedTaxi(); // Render the damaged taxi
+
+            if (!isNewTaxiCreated) {
+                stopAndEjectDriver(driver);
+                spawnNewTaxi(driver);  // Create the new taxi once
+                isNewTaxiCreated = true;
+            }
+        }
+
+        // Case 2: The new taxi is created, and the driver is not inside
+        if (isNewTaxiCreated && !isNewTaxiActive) {
+            if (input != null && input.isDown(Keys.UP)) {
+                newTaxiInstance.y += 5;  // Move the new taxi down by 5 pixels per frame when UP is pressed
+
+            }
+            newTaxiInstance.draw();  // Draw the new taxi at its updated position
+
+        }
+
+        // Case 3: The new taxi is created and active (driver inside)
+        if (isNewTaxiCreated && isNewTaxiActive) {
+            if (input != null) {
+                newTaxiInstance.adjustToInputMovement(input); // Allow new taxi movement if active
+            }
+            newTaxiInstance.draw();
+
+        }
+
+        // Case 4: The original taxi is not destroyed, and a new taxi hasn't been created
+        if (!isDestroyed && !isNewTaxiCreated) {
+            if (input != null) {
+                adjustToInputMovement(input); // Allow movement of the original taxi
+            }
+            draw();
+        }
+
+        // Move the damaged taxi downward only if up arrow key is pressed
+        if (shouldScrollDamagedTaxi && input != null && input.isDown(Keys.UP)) {
+            y += 5;
+            drawDamagedTaxi();
+        }
+
+        // if the taxi has coin power, apply the effect of the coin on the priority of the passenger
+        // (See the logic in TravelPlan class)
+        if (trip != null && coinPower != null) {
+            TravelPlan tp = trip.getPassenger().getTravelPlan();
+            int newPriority = tp.getPriority();
+            if(!tp.getCoinPowerApplied()) {
+                newPriority = coinPower.applyEffect(tp.getPriority());
+            }
+            if(newPriority < tp.getPriority()) {
+                tp.setCoinPowerApplied();
+            }
+            tp.setPriority(newPriority);
+        }
+
+        if(trip != null && trip.hasReachedEnd()) {
+            getTrip().end();
+        }
+
+        // the flag of the current trip renders to the screen
+        if(tripCount > 0) {
+            Trip lastTrip = TRIPS[tripCount - 1];
+            if(!lastTrip.getPassenger().hasReachedFlag()) {
+                lastTrip.getTripEndFlag().update(input);
+            }
+        }
 
 
+        // Handle invincibility and collision timeout
+        if (collisionTimeout > 0) collisionTimeout--;
+        if (invincibilityFrames > 0) invincibilityFrames--;
+    }
 
+
+/*
     public void update(Input input, Driver driver) {
         this.driver = driver;
         if (health <= 0 ) {
@@ -120,12 +199,12 @@ public class Taxi implements Collidable {
         if (newTaxiInstance != null && driver.calculateDistance(newTaxiInstance) <= driver.getTaxiInRadius()) {
             driver.setInTaxi(true);
             isNewTaxiActive = true; // Enable control for new taxi
-            shouldScrollDamagedTaxi = false;
+            //shouldScrollDamagedTaxi = false;  /////CHECK
         }
         // Move damaged taxi down only if up arrow key is pressed
         if (input != null && input.isDown(Keys.UP) && shouldScrollDamagedTaxi) {
             y += 1;
-            if (y >= 768) shouldScrollDamagedTaxi = false;
+            //if (y >= 768) shouldScrollDamagedTaxi = false;
             drawDamagedTaxi();
         }
 
@@ -158,6 +237,8 @@ public class Taxi implements Collidable {
         if (collisionTimeout > 0) collisionTimeout--;
         if (invincibilityFrames > 0) invincibilityFrames--; // Reduce invincibility duration
     }
+
+ */
 
     public void draw() {
         if (health > 0 && !isDestroyed) {
@@ -221,20 +302,25 @@ public class Taxi implements Collidable {
     }
 
         public void adjustToInputMovement(Input input) {
-        if (input.wasPressed(Keys.UP)) {
-            isMovingY = true;
-        } else if (input.wasReleased(Keys.UP)) {
-            isMovingY = false;
-        } else if (input.isDown(Keys.LEFT)) {
-            x -= SPEED_X;
-            isMovingX = true;
-        } else if (input.isDown(Keys.RIGHT)) {
-            x += SPEED_X;
-            isMovingX = true;
-        } else if (input.wasReleased(Keys.LEFT) || input.wasReleased(Keys.RIGHT)) {
-            isMovingX = false;
+            if (isNewTaxiCreated && !isNewTaxiActive) {
+                return;
+            } else {
+                if (input.wasPressed(Keys.UP)) {
+                    isMovingY = true;
+                } else if (input.wasReleased(Keys.UP)) {
+                    isMovingY = false;
+                } else if (input.isDown(Keys.LEFT)) {
+                    x -= SPEED_X;
+                    isMovingX = true;
+                } else if (input.isDown(Keys.RIGHT)) {
+                    x += SPEED_X;
+                    isMovingX = true;
+                } else if (input.wasReleased(Keys.LEFT) || input.wasReleased(Keys.RIGHT)) {
+                    isMovingX = false;
+                }
+            }
+
         }
-    }
 
     public void collectPower(Coin coin) {
         coinPower = coin;
@@ -243,7 +329,7 @@ public class Taxi implements Collidable {
 
 
     // Method to spawn a new taxi at random coordinates
-    private void spawnNewTaxi(Driver driver) {
+    public void spawnNewTaxi(Driver driver) {
         Random random = new Random();
         // Randomly select x-coordinate (either 360 or 620 for specified lanes)
         int newX = random.nextBoolean() ? 360 : 620;
