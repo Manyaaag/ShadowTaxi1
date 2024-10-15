@@ -1,8 +1,11 @@
-
 import bagel.Image;
 import java.util.Properties;
 
-public class Fireball implements Collidable {
+/**
+ * Represents a Fireball in the game, which can move, detect collisions, and apply damage
+ * to other entities upon collision. The Fireball has properties such as radius, speed, and damage.
+ */
+public class Fireball {
 
     private final Image FIREBALL_IMAGE;
     private final float FIREBALL_RADIUS;
@@ -12,6 +15,13 @@ public class Fireball implements Collidable {
     protected int x, y;  // Fireball's current coordinates
     private boolean isDestroyed;
 
+    /**
+     * Constructs a Fireball instance with specified initial position and properties.
+     *
+     * @param x     The initial x-coordinate of the fireball.
+     * @param y     The initial y-coordinate of the fireball.
+     * @param props Properties object to configure fireball attributes.
+     */
     public Fireball(int x, int y, Properties props) {
         // Load the fireball properties from the properties file
         this.FIREBALL_IMAGE = new Image(props.getProperty("gameObjects.fireball.image"));
@@ -25,7 +35,8 @@ public class Fireball implements Collidable {
     }
 
     /**
-     * Update the fireball's position and check for collisions or reaching the top of the screen.
+     * Updates the fireball's position, moving it upwards, and checks if it reaches
+     * the top of the screen, which destroys it.
      */
     public void update() {
         if (!isDestroyed) {
@@ -39,19 +50,17 @@ public class Fireball implements Collidable {
     }
 
     /**
-     * Renders the fireball on the screen.
+     * Renders the fireball on the screen at its current coordinates.
      */
-//    public void draw() {
-//        if (!isDestroyed) {
-//            FIREBALL_IMAGE.draw(x, y);
-//        }
-//    }
     public void draw() {
         FIREBALL_IMAGE.draw(x, y);
     }
 
     /**
-     * Handles collision with game entities and applies damage.
+     * Handles collision with game entities and applies damage if the collision occurs.
+     * The fireball is destroyed upon collision.
+     *
+     * @param entity The entity the fireball collides with.
      */
     public void collide(Object entity) {
         if (!isDestroyed && entity != null && checkCollision(entity)) {
@@ -67,7 +76,11 @@ public class Fireball implements Collidable {
     }
 
     /**
-     * Checks whether the fireball collides with a given entity.
+     * Checks whether the fireball collides with a given entity by calculating the distance
+     * between the fireball and the entity.
+     *
+     * @param entity The entity to check collision with.
+     * @return true if collision occurred, false otherwise.
      */
     private boolean checkCollision(Object entity) {
         if (entity instanceof Taxi || entity instanceof Car || entity instanceof EnemyCar) {
@@ -82,41 +95,59 @@ public class Fireball implements Collidable {
 
     /**
      * Returns whether the fireball is destroyed.
+     *
+     * @return true if the fireball is destroyed; false otherwise.
      */
     public boolean isDestroyed() {
         return isDestroyed;
     }
 
-    // Getter for fireball damage
+    /**
+     * Gets the damage the fireball inflicts upon collision.
+     *
+     * @return The damage value of the fireball.
+     */
     public float getDamage() {
         return FIREBALL_DAMAGE;
     }
 
-    // Getter for fireball radius (for collision detection)
+    /**
+     * Gets the radius of the fireball for collision detection purposes.
+     *
+     * @return The radius of the fireball.
+     */
     public float getRadius() {
         return FIREBALL_RADIUS;
     }
 
-    @Override
-    public void setInvincible(int frames) {
-
-    }
-
+    /**
+     * Gets the x-coordinate of the fireball.
+     *
+     * @return The x-coordinate of the fireball.
+     */
     public int getX() {
         return x;
     }
 
-    // Getter for y-coordinate
+    /**
+     * Gets the y-coordinate of the fireball.
+     *
+     * @return The y-coordinate of the fireball.
+     */
     public int getY() {
         return y;
     }
 
-
+    /**
+     * Determines if the fireball has collided with a given collidable entity.
+     *
+     * @param entity The entity to check collision with.
+     * @return true if the fireball collided with the entity; false otherwise.
+     */
     public boolean hasCollided(Collidable entity) {
         if (entity == null) return false;
 
         float distance = (float) Math.sqrt(Math.pow(this.getX() - entity.getX(), 2) + Math.pow(this.getY() - entity.getY(), 2));
         return distance <= (this.getRadius() + entity.getRadius());
     }
-
 }

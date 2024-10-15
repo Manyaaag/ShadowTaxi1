@@ -1,6 +1,11 @@
+
 import bagel.Image;
 import java.util.Properties;
 
+/**
+ * Represents an invincibility power-up in the game, which grants invincibility
+ * to the player when collected.
+ */
 public class InvinciblePower {
 
     private final Properties PROPS;
@@ -13,6 +18,13 @@ public class InvinciblePower {
     public boolean isCollided;
     public boolean isCollected = false;
 
+    /**
+     * Constructs an InvinciblePower instance at specified coordinates with properties.
+     *
+     * @param x     The x-coordinate for the InvinciblePower.
+     * @param y     The y-coordinate for the InvinciblePower.
+     * @param props Properties object containing configuration for invincible power attributes.
+     */
     public InvinciblePower(int x, int y, Properties props) {
         this.PROPS = props;
 
@@ -33,6 +45,8 @@ public class InvinciblePower {
     /**
      * Updates the position of the Invincible Power.
      * Moves vertically down by 5 pixels per frame when the up arrow key is pressed.
+     *
+     * @param upArrowPressed Whether the up arrow is currently pressed.
      */
     public void update(boolean upArrowPressed) {
         if (upArrowPressed) {
@@ -41,11 +55,8 @@ public class InvinciblePower {
     }
 
     /**
-     * Renders the Invincible Power on the screen.
+     * Renders the Invincible Power on the screen if it has not been collected.
      */
-//    public void draw() {
-//        IMAGE.draw(x, y);
-//    }
     public void draw() {
         if (!isCollected) { // 3. Only draw if not collected
             IMAGE.draw(x, y);
@@ -54,6 +65,7 @@ public class InvinciblePower {
 
     /**
      * Checks for collision with an entity and activates invincibility if a collision occurs.
+     *
      * @param entity The entity (Taxi or Driver) to check for collision.
      */
     public void collide(Collidable entity) {
@@ -65,6 +77,7 @@ public class InvinciblePower {
 
     /**
      * Check if the invincibility power collides with the given entity.
+     *
      * @param entity The entity to check collision with (Taxi, Driver, etc.).
      * @return true if a collision occurs, false otherwise.
      */
@@ -72,7 +85,6 @@ public class InvinciblePower {
         float distance = (float) Math.sqrt(Math.pow(this.x - entity.getX(), 2) + Math.pow(this.y - entity.getY(), 2));
         return distance <= this.RADIUS + entity.getRadius();
     }
-
 
     /**
      * Activate the invincibility power.
@@ -82,15 +94,19 @@ public class InvinciblePower {
         this.activeFrames = MAX_FRAMES;
     }
 
+    /**
+     * Grants invincibility to the taxi for the duration of MAX_FRAMES.
+     *
+     * @param taxi The taxi object to make invincible.
+     */
     private void activatePower(Taxi taxi) {
         taxi.setInvincible(MAX_FRAMES);  // Set taxi to be invincible for MAX_FRAMES
         isActive = false;  // Deactivate the power-up after activation
     }
 
-
-
     /**
      * Getter for the invincibility status.
+     *
      * @return true if invincibility is active, false otherwise.
      */
     public boolean isActive() {
@@ -110,35 +126,38 @@ public class InvinciblePower {
         }
     }
 
-    // Getter for x-coordinate
+    /**
+     * Getter for the x-coordinate.
+     *
+     * @return The x-coordinate of the invincibility power.
+     */
     public int getX() {
         return x;
     }
 
-    // Getter for y-coordinate
+    /**
+     * Getter for the y-coordinate.
+     *
+     * @return The y-coordinate of the invincibility power.
+     */
     public int getY() {
         return y;
     }
 
-    // Getter for radius
+    /**
+     * Getter for the radius.
+     *
+     * @return The radius of the invincibility power.
+     */
     public float getRadius() {
         return RADIUS;
     }
 
-
-
     /**
-     * Check if the coin has collided with any PowerCollectable objects, and power will be collected by PowerCollectable
-     * object that is collided with.
+     * Checks for collision with the Taxi and grants invincibility if collected.
+     *
+     * @param taxi The Taxi object to check for collision and apply invincibility.
      */
-
-//    public void collide(Taxi taxi) {
-//        if(hasCollidedWith(taxi)) {
-//            taxi.isInvincible = true;
-//            setIsCollided();
-//            //isActive = false;     // Stop rendering after collection
-//        }
-//    }
     public void collide(Taxi taxi) {
         if (!isCollected && hasCollidedWith(taxi)) { // Ensure it hasn't been collected
             taxi.setInvincible(MAX_FRAMES);  // Set taxi to be invincible for MAX_FRAMES
@@ -146,14 +165,18 @@ public class InvinciblePower {
         }
     }
 
+    /**
+     * Sets the invincibility power as collided.
+     */
     public void setIsCollided() {
         this.isCollided = true;
     }
 
     /**
-     * Check if the object is collided with another object based on the radius of the two objects.
-     * @param taxi The taxi object to be checked.
-     * @return True if the two objects are collided, false otherwise.
+     * Checks if the invincibility power has collided with the taxi based on their radii.
+     *
+     * @param taxi The taxi object to check collision with.
+     * @return True if the objects are colliding, false otherwise.
      */
     public boolean hasCollidedWith(Taxi taxi) {
         // if the distance between the two objects is less than the sum of their radius, they are collided
@@ -162,3 +185,4 @@ public class InvinciblePower {
         return currDistance <= collisionDistance;
     }
 }
+

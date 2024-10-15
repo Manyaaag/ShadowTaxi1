@@ -1,10 +1,13 @@
 
 import bagel.Image;
-
 import java.util.Properties;
 import java.util.Random;
 
-public class Car implements Collidable{
+/**
+ * Represents a Car in the game, which can move, detect collisions, and take damage.
+ * The Car has properties such as health, damage points, radius, and speed.
+ */
+public class Car implements Collidable {
 
     private final Properties PROPS;
     private final Image IMAGE;
@@ -14,13 +17,18 @@ public class Car implements Collidable{
     private final int COLLISION_TIMEOUT = 200;
     private final int COLLISION_KNOCKBACK_FRAMES = 10;
 
-    private int x, y;
-    private int speedY;
+    private int x, y;  // Car's current coordinates
+    private int speedY;  // Car's movement speed
     private float health;
     private int collisionTimeout;
     private boolean isDestroyed;
     private boolean isInvincible;
 
+    /**
+     * Constructs a Car instance with properties loaded from a given properties file.
+     *
+     * @param props Properties object containing configurations for car attributes.
+     */
     public Car(Properties props) {
         this.PROPS = props;
         int carType = new Random().nextInt(Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.types"))) + 1;
@@ -40,6 +48,9 @@ public class Car implements Collidable{
         this.isDestroyed = false;
     }
 
+    /**
+     * Updates the car's position and collision state.
+     */
     public void update() {
         if (isDestroyed) return;
 
@@ -56,6 +67,9 @@ public class Car implements Collidable{
         }
     }
 
+    /**
+     * Renders the car on the screen if it is not destroyed.
+     */
     public void draw() {
         if (!isDestroyed) {
             IMAGE.draw(x, y);
@@ -67,31 +81,14 @@ public class Car implements Collidable{
 //                fireImage.draw(this.x, this.y);
 //                fireRenderTimeout++;
 //            }
-//        } else {
-//            // Always render the car (whether damaged or not)
-//            image.draw(this.x, this.y);
-//            // If the health is 50 or less, render smoke on top of the car
-//            if (health <= 50 && smokeRenderTimeout < SMOKE_RENDER_TIMEOUT_FRAMES) {
-//                System.out.println("Car Health: " + health + " - Rendering smoke.");
-//                smokeImage.draw(this.x, this.y);
-//                smokeRenderTimeout++;
-//            }
-//        }
+//
     }
 
-
-
-//    private void applyKnockback(Taxi taxi) {
-//        for (int i = 0; i < 10; i++) {
-//            if (this.y < taxi.getY()) {
-//                this.y -= 1;
-//                taxi.setY(taxi.getY() + 1);
-//            } else {
-//                this.y += 1;
-//                taxi.setY(taxi.getY() - 1);
-//            }
-//        }
-//    }
+    /**
+     * Applies knockback to the car based on its collision with another entity.
+     *
+     * @param entity The entity with which this car has collided.
+     */
     private void applyKnockback(Object entity) {
         if (entity instanceof Taxi) {
             Taxi taxi = (Taxi) entity;
@@ -129,7 +126,11 @@ public class Car implements Collidable{
         }
     }
 
-
+    /**
+     * Reduces the car's health by a specified amount of damage.
+     *
+     * @param damage The damage amount to subtract from the car's health.
+     */
     public void takeDamage(float damage) {
         health -= damage;
         if (health <= 0) {
@@ -139,64 +140,97 @@ public class Car implements Collidable{
         }
     }
 
+    /**
+     * Sets a timeout for the car's collision state.
+     *
+     * @param timeout Duration for which the car is in collision timeout.
+     */
     public void setCollisionTimeout(int timeout) {
         this.collisionTimeout = timeout;
     }
 
-
+    /**
+     * Resets the car's speed after a collision timeout.
+     */
     private void resetSpeed() {
         int minSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.minSpeedY"));
         int maxSpeedY = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.maxSpeedY"));
         this.speedY = new Random().nextInt(maxSpeedY - minSpeedY + 1) + minSpeedY;
     }
 
+    /**
+     * Gets the car's damage points.
+     *
+     * @return The amount of damage the car can inflict.
+     */
     public float getDamage() {
         return DAMAGE_POINTS;
     }
 
+    /**
+     * Gets the radius of the car.
+     *
+     * @return The car's radius.
+     */
     public float getRadius() {
         return RADIUS;
     }
 
     @Override
     public void setInvincible(int frames) {
-
+        // Implementation left blank as per game requirements
     }
 
+    /**
+     * Gets the x-coordinate of the car.
+     *
+     * @return The car's x-coordinate.
+     */
     public int getX() {
         return x;
     }
 
+    /**
+     * Gets the y-coordinate of the car.
+     *
+     * @return The car's y-coordinate.
+     */
     public int getY() {
         return y;
     }
 
+    /**
+     * Sets the y-coordinate of the car.
+     *
+     * @param y The y-coordinate to set.
+     */
     public void setY(int y) {
         this.y = y;
     }
 
+    /**
+     * Sets the x-coordinate of the car.
+     *
+     * @param x The x-coordinate to set.
+     */
+    public void setX(int x) {
+        this.x = x;
+    }
 
+    /**
+     * Checks if the car is currently in a collision timeout.
+     *
+     * @return true if the car is in collision timeout; false otherwise.
+     */
     public boolean hasCollided() {
         return collisionTimeout > 0;
     }
 
-
-/*
-    @Override
-
-    public void collide(Object entity) {
-        if (entity instanceof Taxi) {
-            collide((Taxi) entity);
-        } else if (entity instanceof Car) {
-            collideWithOtherCar((Car) entity);
-        } else if (entity instanceof EnemyCar) {
-            collideWithEnemyCar((EnemyCar) entity);
-        } else if (entity instanceof Fireball) {
-            collideWithFireball((Fireball) entity);
-        }
-    }
-
- */
+    /**
+     * Handles collision logic with different entities in the game.
+     *
+     * @param entity The entity with which this car collides.
+     */
     public void collide(Object entity) {
         if (entity instanceof Taxi) {
             Taxi taxi = (Taxi) entity;
@@ -234,11 +268,11 @@ public class Car implements Collidable{
         }
     }
 
-
-
-
-
-    // Method to handle collision with another Car
+    /**
+     * Handles collision with another Car.
+     *
+     * @param otherCar The Car with which this car has collided.
+     */
     public void collideWithOtherCar(Car otherCar) {
         if (isDestroyed || collisionTimeout > 0 || otherCar.collisionTimeout > 0) return;
 
@@ -252,7 +286,11 @@ public class Car implements Collidable{
         }
     }
 
-    // Method to handle collision with an EnemyCar
+    /**
+     * Handles collision with an EnemyCar.
+     *
+     * @param enemyCar The EnemyCar with which this car has collided.
+     */
     public void collideWithEnemyCar(EnemyCar enemyCar) {
         if (isDestroyed || collisionTimeout > 0 || enemyCar.isInvincible() || enemyCar.getCollisionTimeout() > 0) return;
 
@@ -266,7 +304,11 @@ public class Car implements Collidable{
         }
     }
 
-    // Method to handle collision with a Fireball
+    /**
+     * Handles collision with a Fireball.
+     *
+     * @param fireball The Fireball with which this car has collided.
+     */
     public void collideWithFireball(Fireball fireball) {
         if (isDestroyed || collisionTimeout > 0) return;
 
@@ -274,7 +316,6 @@ public class Car implements Collidable{
         if (distance < this.RADIUS + fireball.getRadius()) {
             this.takeDamage(fireball.getDamage());
             collisionTimeout = COLLISION_TIMEOUT;
-            // Apply additional effects if needed
         }
     }
 
@@ -285,9 +326,6 @@ public class Car implements Collidable{
         float distance = (float) Math.sqrt(Math.pow(this.getX() - entity.getX(), 2) + Math.pow(this.getY() - entity.getY(), 2));
         return distance <= (this.getRadius() + entity.getRadius());
     }
-
-
 }
-
 
 

@@ -216,6 +216,7 @@ public class GamePlayScreen{
 
         }
 
+
         taxi.update(input,driver);
         driver.updateWithTaxi(input, taxi);
 
@@ -228,7 +229,6 @@ public class GamePlayScreen{
         // Render cars
         for (Car car : cars) {
             car.draw();
-            //car.update();
 
             // Handle collision with Taxi
             car.collide(taxi);
@@ -246,52 +246,52 @@ public class GamePlayScreen{
             }
         }
 
+        //Update and render EnemyCars
+        for (EnemyCar enemyCar : enemyCars) {
+            enemyCar.draw();
 
+            enemyCar.collide(taxi);
+        }
 
         // ** Car creation logic **
         if (new Random().nextInt(1000) % 200 == 0) {  // Randomly create a car
-            //cars.add(new Car(GAME_PROPS));
             cars.add(new Car(GAME_PROPS));
         }
 
-        if (new Random().nextInt(1000) % 400 == 0) {  // Adjust frequency as desired
+        if (new Random().nextInt(1000) % 400 == 0) {
             enemyCars.add(new EnemyCar(GAME_PROPS));
         }
-
-         //Update and render EnemyCars
-        for (EnemyCar enemyCar : enemyCars) {
-            //enemyCar.update();
-            enemyCar.draw();
-        }
-
-        for (EnemyCar enemyCar : enemyCars) {
-            //enemyCar.draw();
-            enemyCar.update();
-
-            // Handle collision with Taxi
-            enemyCar.collide(taxi);
-
-            // Check for collision with other EnemyCars
-            for (EnemyCar otherEnemy : enemyCars) {
-                if (enemyCar != otherEnemy) {
-                    enemyCar.collide(otherEnemy);
-                }
-            }
-
-            // Check for collision with Cars
-            for (Car car : cars) {
-                enemyCar.collide(car);
-            }
-
-        }
-
-
         // Update existing cars
         for (Car car : cars) {
             car.update();
         }
+        // Update existing cars
+        for (EnemyCar enemyCar : enemyCars) {
+            enemyCar.update();
+        }
 
 
+
+//        for (EnemyCar enemyCar : enemyCars) {
+//            //enemyCar.draw();
+//            enemyCar.update();
+//
+//            // Handle collision with Taxi
+//            enemyCar.collide(taxi);
+//
+//            // Check for collision with other EnemyCars
+//            for (EnemyCar otherEnemy : enemyCars) {
+//                if (enemyCar != otherEnemy) {
+//                    enemyCar.collide(otherEnemy);
+//                }
+//            }
+//
+//            // Check for collision with Cars
+//            for (Car car : cars) {
+//                enemyCar.collide(car);
+//            }
+//
+//        }
 
         // Check for collisions with taxi and driver
         //invinciblePower.collide(taxi);
@@ -320,9 +320,6 @@ public class GamePlayScreen{
         return isGameOver() || isLevelCompleted();
 
     }
-
-
-
 
 
     /**

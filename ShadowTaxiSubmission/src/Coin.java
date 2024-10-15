@@ -111,6 +111,13 @@ public class Coin{
         return currDistance <= collisionDistance;
     }
 
+//    public boolean hasCollidedWith(Driver driver) {
+//        // if the distance between the two objects is less than the sum of their radius, they are collided
+//        float collisionDistance = RADIUS + driver.getRadius();
+//        float currDistance = (float) Math.sqrt(Math.pow(x - driver.getX(), 2) + Math.pow(y - driver.getY(), 2));
+//        return currDistance <= collisionDistance;
+//    }
+
     /**
      * Mark the status of the object as collided when it's collided with another object.
      * This will initiate the collision timeout.

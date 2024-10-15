@@ -1,12 +1,14 @@
 
-//DO ENEMY CAR AND FIREBALL LAST
-
 import bagel.Image;
-
 import java.util.Properties;
 import java.util.Random;
 
-public class EnemyCar {
+/**
+ * The EnemyCar class represents an enemy car in the game, capable of moving,
+ * colliding with other game objects, and taking damage. It has properties such as
+ * radius, damage, health, and collision behavior.
+ */
+public class EnemyCar implements Collidable {
 
     private final Properties PROPS;
     private final Image IMAGE;
@@ -26,19 +28,19 @@ public class EnemyCar {
     private final int FIRE_RENDER_TIMEOUT_FRAMES = 20;
     private int fireRenderTimeout;
 
-
-
+    /**
+     * Constructs an EnemyCar instance with specified properties.
+     *
+     * @param props Properties to configure enemy car behavior and image.
+     */
     public EnemyCar(Properties props) {
         this.PROPS = props;
-
         this.fireRenderTimeout = 0;
         this.IMAGE = new Image(String.format(PROPS.getProperty("gameObjects.enemyCar.image")));
 
         // Get car properties
         this.RADIUS = Float.parseFloat(PROPS.getProperty("gameObjects.enemyCar.radius"));
-        //this.DAMAGE_POINTS = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.damage"));
-        this.DAMAGE_POINTS = Float.parseFloat(PROPS.getProperty("gameObjects.enemyCar.damage"));  // Parse as float
-        //this.health = Integer.parseInt(PROPS.getProperty("gameObjects.otherCar.health"));
+        this.DAMAGE_POINTS = Float.parseFloat(PROPS.getProperty("gameObjects.enemyCar.damage"));
         this.health = Float.parseFloat(PROPS.getProperty("gameObjects.enemyCar.health"));
 
         // Randomly choose the speed of the car between the provided range
@@ -55,7 +57,6 @@ public class EnemyCar {
         this.y = yCoords[new Random().nextInt(yCoords.length)];
 
         // Initialize other properties
-        //this.collisionTimeout = 0;
         this.isColliding = false;
         this.isDestroyed = false;
     }
@@ -63,43 +64,6 @@ public class EnemyCar {
     /**
      * Updates the car's position and checks for collisions.
      */
-
-
-
-
-
-    /*
-    public void update() {
-        if (isDestroyed) {
-            return;  // Do not update the car if it is destroyed
-        }
-
-        // If the car is colliding, handle collision behavior
-        if (collisionTimeout > 0) {
-            collisionTimeout--;
-//            if (collisionTimeout <= COLLISION_KNOCKBACK_FRAMES) {
-//                // Knockback logic - move the car away from the collided object
-//                y += speedY * (collisionTimeout > 0 ? -1 : 1);
-//            }
-
-            // Apply knockback effect only during the first COLLISION_KNOCKBACK_FRAMES
-            if (collisionTimeout > COLLISION_TIMEOUT - COLLISION_KNOCKBACK_FRAMES) {
-                y += speedY > 0 ? -1 : 1;  // Move up or down based on speed direction
-            }
-            if (collisionTimeout == 0) {
-                // After collision timeout, reset the speedY
-                resetSpeed();
-            }
-        } else {
-            // Normal movement, move the car vertically upwards
-            y -= speedY;
-        }
-    }
-
-     */
-
-
-
     public void update() {
         if (isDestroyed) return;
 
@@ -125,6 +89,11 @@ public class EnemyCar {
         }
     }
 
+    /**
+     * Applies knockback effect to the car upon collision.
+     *
+     * @param entity The entity to apply knockback against.
+     */
     private void applyKnockback(Object entity) {
         if (entity instanceof Taxi) {
             Taxi taxi = (Taxi) entity;
@@ -140,27 +109,9 @@ public class EnemyCar {
         }
     }
 
-
     /**
      * Handles collision with other game objects.
      */
-/*
-    public void collide(Object entity) {
-        if (isDestroyed || collisionTimeout > 0) {
-            return;  // Skip collisions if the car is already destroyed or in timeout
-        }
-
-        if (entity instanceof Taxi || entity instanceof Car || entity instanceof EnemyCar || entity instanceof Fireball) {
-            int entityDamage = entity.getDamage();
-            takeDamage(entityDamage);
-            entity.takeDamage(DAMAGE_POINTS);
-
-            // Start collision timeout
-            collisionTimeout = COLLISION_TIMEOUT;
-        }
-    }
-
- */
     public void collide(Object entity) {
         if (isDestroyed || collisionTimeout > 0) {
             return;  // Skip collisions if the car is already destroyed or in timeout
@@ -168,20 +119,13 @@ public class EnemyCar {
 
         if (entity instanceof Taxi) {
             Taxi taxi = (Taxi) entity;
-            //if (this.hasCollided(taxi)) {  // Ensure this check is accurate
             if (!taxi.isDestroyed() && hasCollided((Collidable) taxi)) {
                 float entityDamage = taxi.getDamage();
                 takeDamage(entityDamage);
                 applyKnockback(taxi);
-                taxi.takeDamage(DAMAGE_POINTS);
+                taxi.takeDamage(DAMAGE_POINTS * 100);
                 collisionTimeout = COLLISION_TIMEOUT;
             }
-        //collisionTimeout = COLLISION_TIMEOUT; // Reset collision timeout
-//            float entityDamage = taxi.getDamage();
-//            takeDamage(entityDamage);
-//            /////isDestroyed = true;
-//            taxi.takeDamage(DAMAGE_POINTS*100);
-
         } else if (entity instanceof Car) {
             Car car = (Car) entity;
             float entityDamage = car.getDamage();
@@ -201,32 +145,25 @@ public class EnemyCar {
             float entityDamage = fireball.getDamage();
             takeDamage(entityDamage);
             collisionTimeout = COLLISION_TIMEOUT;
-            //fireball.takeDamage(DAMAGE_POINTS);
         }
-
-        // Start collision timeout
-        //collisionTimeout = COLLISION_TIMEOUT;
     }
-
-
-
-
 
     /**
      * Takes damage and checks if the car is destroyed.
+     *
+     * @param damage The amount of damage to apply.
      */
     public void takeDamage(float damage) {
         health -= damage;
         if (health <= 0) {
             isDestroyed = true;
             fireRenderTimeout = 0;
-//            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
-//                System.out.println("hi");
-//                Image fireImage = new Image("res/fire.png");
-//                fireImage.draw(this.x, this.y);
-//                fireRenderTimeout++;
-//            }
-            // Render fire effect or similar visual indicator (not implemented here)
+            if (fireRenderTimeout < FIRE_RENDER_TIMEOUT_FRAMES) {
+                System.out.println("hi");
+                Image fireImage = new Image("res/fire.png");
+                fireImage.draw(this.x, this.y);
+                fireRenderTimeout++;
+            }
         }
     }
 
@@ -239,54 +176,111 @@ public class EnemyCar {
         this.speedY = new Random().nextInt(maxSpeedY - minSpeedY + 1) + minSpeedY;
     }
 
-    // Getters for damage and radius (for collision detection)
+    /**
+     * Retrieves the car's damage points for collision calculations.
+     *
+     * @return The car's damage points.
+     */
     public float getDamage() {
-        return DAMAGE_POINTS;
+        return DAMAGE_POINTS * 100;
     }
 
+    @Override
+    public void setX(int x) {
+        // Implementation not required for this class
+    }
+
+    /**
+     * Retrieves the car's collision radius for collision detection.
+     *
+     * @return The car's collision radius.
+     */
     public float getRadius() {
         return RADIUS;
     }
 
-    // Getter for car's coordinates (for other entity to detect proximity)
+    @Override
+    public void setInvincible(int frames) {
+        // Implementation not required for this class
+    }
+
+    /**
+     * Retrieves the car's x-coordinate.
+     *
+     * @return The car's x-coordinate.
+     */
     public int getX() {
         return x;
     }
 
+    /**
+     * Retrieves the car's y-coordinate.
+     *
+     * @return The car's y-coordinate.
+     */
     public int getY() {
         return y;
     }
+
+    /**
+     * Sets the car's y-coordinate.
+     *
+     * @param y The y-coordinate to set.
+     */
     public void setY(int y) {
         this.y = y;
     }
+
+    /**
+     * Retrieves the car's collision timeout value.
+     *
+     * @return The collision timeout duration.
+     */
     public int getCollisionTimeout() {
         return COLLISION_TIMEOUT;
     }
 
-    public void setCollisionTimeout(int COLLISION_TIMEOUT) {
+    /**
+     * Sets the car's collision timeout to a specified value.
+     *
+     * @param collisionTimeout The timeout value to set.
+     */
+    public void setCollisionTimeout(int collisionTimeout) {
         this.collisionTimeout = collisionTimeout;
     }
 
-    //public void setCollisionTimeout() {
-        //this.COLLISION_TIMEOUT = collisionTimeout;
-    //}
-
+    /**
+     * Checks if the car is invincible.
+     *
+     * @return true if the car is invincible; otherwise, false.
+     */
     protected boolean isInvincible() {
         return invincible;
     }
-    boolean hasCollided () {
+
+    /**
+     * Checks if the car is currently colliding with another object.
+     *
+     * @return true if the car is colliding; otherwise, false.
+     */
+    boolean hasCollided() {
         return isColliding;
     }
 
-
+    /**
+     * Determines if the car has collided with another collidable entity.
+     *
+     * @param entity The entity to check for collision.
+     * @return true if a collision occurred; otherwise, false.
+     */
     public boolean hasCollided(Collidable entity) {
         if (entity == null) return false;
 
         float distance = (float) Math.sqrt(Math.pow(this.getX() - entity.getX(), 2) + Math.pow(this.getY() - entity.getY(), 2));
         return distance <= (this.getRadius() + entity.getRadius());
     }
-
 }
+
 
 
 

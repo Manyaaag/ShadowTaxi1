@@ -1,10 +1,13 @@
-
 import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
 import java.util.Properties;
 
 import java.util.Random;
+
+/**
+ * Class representing a Taxi in the game, implementing movement, collision handling, health, and power-ups.
+ */
 
 public class Taxi implements Collidable {
 
@@ -42,7 +45,14 @@ public class Taxi implements Collidable {
 
     public boolean isOriginalTaxi;
 
-
+    /**
+     * Constructs a Taxi with specified position, maximum trip count, and properties.
+     *
+     * @param x           Initial x-coordinate of the Taxi.
+     * @param y           Initial y-coordinate of the Taxi.
+     * @param maxTripCount Maximum number of trips allowed for the Taxi.
+     * @param props       Properties configuration for the Taxi.
+     */
 
     public Taxi(int x, int y, int maxTripCount, Properties props) {
         this.PROPS = props;
@@ -91,6 +101,13 @@ public class Taxi implements Collidable {
 
     }
 
+    /**
+     * Updates the Taxi's state, handling input, movement, and collision.
+     *
+     * @param input  The game input instance.
+     * @param driver The driver associated with the Taxi.
+     */
+
     public void update(Input input, Driver driver) {
         this.driver = driver;
 
@@ -108,6 +125,7 @@ public class Taxi implements Collidable {
 
         // Case 2: The new taxi is created, and the driver is not inside
         if (isNewTaxiCreated && !isNewTaxiActive) {
+            //health = 100;
             if (input != null && input.isDown(Keys.UP)) {
                 newTaxiInstance.y += 5;  // Move the new taxi down by 5 pixels per frame when UP is pressed
 
@@ -133,27 +151,6 @@ public class Taxi implements Collidable {
             draw();
         }
 
-
-
-        /*
-        // Case 3: The new taxi is created and active (driver inside)
-        if (isNewTaxiCreated && isNewTaxiActive) {
-            if (input != null) {
-                newTaxiInstance.adjustToInputMovement(input); // Allow new taxi movement if active
-            }
-            newTaxiInstance.draw();
-
-        }
-
-        // Case 4: The original taxi is not destroyed, and a new taxi hasn't been created
-        else if (!isDestroyed && !isNewTaxiCreated) {
-            if (input != null) {
-                adjustToInputMovement(input); // Allow movement of the original taxi
-            }
-            draw();
-        }
-
-         */
 
         // Move the damaged taxi downward only if up arrow key is pressed
         if (shouldScrollDamagedTaxi && input != null && input.isDown(Keys.UP)) {
@@ -193,6 +190,9 @@ public class Taxi implements Collidable {
         if (invincibilityFrames > 0) invincibilityFrames--;
     }
 
+    /**
+     * Draws the Taxi image on the screen if it is not destroyed.
+     */
 
     public void draw() {
         if (health > 0 && !isDestroyed) {
@@ -200,10 +200,18 @@ public class Taxi implements Collidable {
         }
     }
 
+    /**
+     * Activates the new Taxi, allowing it to be controlled.
+     */
     public void activate() {
         isNewTaxiActive = true;
         System.out.println("New taxi now active");
     }
+    /**
+     * Stops and ejects the driver from the Taxi.
+     *
+     * @param driver The driver to be ejected.
+     */
 
 
     private void stopAndEjectDriver(Driver driver) {
@@ -213,6 +221,9 @@ public class Taxi implements Collidable {
         driver.setInTaxi(false);
         shouldScrollDamagedTaxi = true;
     }
+    /**
+     * Draws the damaged Taxi on the screen, including a fire effect if applicable.
+     */
 
     private void drawDamagedTaxi() {
         Image damagedImage = new Image("res/taxiDamaged.png");
@@ -233,6 +244,11 @@ public class Taxi implements Collidable {
     public boolean isMovingX() {
         return isMovingX;
     }
+    /**
+     * Sets the current trip for the Taxi.
+     *
+     * @param trip The Trip to associate with the Taxi.
+     */
 
     public void setTrip(Trip trip) {
         this.trip = trip;
@@ -241,6 +257,11 @@ public class Taxi implements Collidable {
             tripCount++;
         }
     }
+    /**
+     * Retrieves the current trip of the Taxi.
+     *
+     * @return The current Trip associated with the Taxi.
+     */
 
     public Trip getTrip() {
         return this.trip;
@@ -255,6 +276,11 @@ public class Taxi implements Collidable {
         }
         return TRIPS[tripCount - 1];
     }
+    /**
+     * Adjusts Taxi movement based on user input.
+     *
+     * @param input The input used to adjust movement.
+     */
 
     public void adjustToInputMovement(Input input) {
         if (isNewTaxiCreated && !isNewTaxiActive) {
@@ -276,12 +302,20 @@ public class Taxi implements Collidable {
         }
 
     }
+    /**
+     * Collects a coin power-up, applying its effect to the Taxi.
+     *
+     * @param coin The Coin power-up to collect.
+     */
 
     public void collectPower(Coin coin) {
         coinPower = coin;
     }
-
-
+    /**
+     * Spawns a new Taxi at random coordinates.
+     *
+     * @param driver The Driver associated with the new Taxi.
+     */
 
     // Method to spawn a new taxi at random coordinates
     public void spawnNewTaxi(Driver driver) {
@@ -304,6 +338,12 @@ public class Taxi implements Collidable {
         //System.out.println("New Taxi Created at coordinates: (" + newX + ", " + newY + ")");
     }
 
+    /**
+     * Applies damage to the Taxi and checks if it is destroyed.
+     *
+     * @param damage The damage amount to apply.
+     */
+
     public void takeDamage(float damage) {
         if (collisionTimeout == 0 && invincibilityFrames == 0) {
             health -= damage;
@@ -317,7 +357,9 @@ public class Taxi implements Collidable {
     }
 
 
-
+    /**
+     * Activates invincibility for the Taxi for a set number of frames.
+     */
 
     public void activateInvincibility() {
         invincibilityFrames = 1000; // Makes taxi invincible for 1000 frames
@@ -330,6 +372,12 @@ public class Taxi implements Collidable {
     public boolean isDestroyed() {
         return isDestroyed;
     }
+    /**
+     * Checks if the Taxi has collided with another entity.
+     *
+     * @param entity The entity to check collision against.
+     * @return true if a collision occurred, false otherwise.
+     */
 
     public boolean hasCollided(Collidable entity) {
         if (entity == null) return false;
@@ -350,6 +398,11 @@ public class Taxi implements Collidable {
         //collidewithInvinciblePower((InvinciblePower) entity);
         //}
     }
+    /**
+     * Handles collision with a Car entity.
+     *
+     * @param car The Car entity involved in the collision.
+     */
 
     // Method to handle collision with a Car
     public void collideWithCar(Car car) {
@@ -365,6 +418,11 @@ public class Taxi implements Collidable {
             // Render smoke effect for 20 frames, using smoke.png at the taxi’s coordinates
         }
     }
+    /**
+     * Handles collision with an EnemyCar entity.
+     *
+     * @param enemyCar The EnemyCar entity involved in the collision.
+     */
 
     // Method to handle collision with an EnemyCar
     public void collideWithEnemyCar(EnemyCar enemyCar) {
@@ -379,6 +437,11 @@ public class Taxi implements Collidable {
             applyKnockback(enemyCar);
         }
     }
+    /**
+     * Handles collision with a Fireball entity.
+     *
+     * @param fireball The Fireball entity involved in the collision.
+     */
 
     // Method to handle collision with a Fireball
     public void collideWithFireball(Fireball fireball) {
@@ -391,7 +454,11 @@ public class Taxi implements Collidable {
             // Render smoke effect here as well, if needed
         }
     }
-
+    /**
+     * Applies a knockback effect on the given entity.
+     *
+     * @param entity The entity to apply knockback on.
+     */
 
     private void applyKnockback(Object entity) {
         for (int i = 0; i < 10; i++) {
@@ -449,3 +516,4 @@ public class Taxi implements Collidable {
 //    }
 
 }
+
