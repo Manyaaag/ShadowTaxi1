@@ -17,13 +17,20 @@ public class Background {
     private int y;
     private int moveY;
 
-    public Background(int x, int y, Properties props) {
+    public Background(int x, int y, Properties props, String imageType) {
+
         this.x = x;
         this.y = y;
         this.moveY = 0;
 
+        String backgroundImagePath = props.getProperty(imageType);
+        if (backgroundImagePath == null) {
+            throw new IllegalArgumentException("Missing property for image type: " + imageType);
+        }
+
         this.SPEED_Y = Integer.parseInt(props.getProperty("gameObjects.taxi.speedY"));
-        this.IMAGE = new Image(props.getProperty("backgroundImage"));
+        //this.IMAGE = new Image(props.getProperty("backgroundImage"));
+        this.IMAGE = new Image(backgroundImagePath);
         this.WINDOW_HEIGHT = Integer.parseInt(props.getProperty("window.height"));
     }
 

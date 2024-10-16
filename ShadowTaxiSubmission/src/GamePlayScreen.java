@@ -1,4 +1,5 @@
 import bagel.Font;
+import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
 
@@ -53,6 +54,8 @@ public class GamePlayScreen{
     private final int TAXI_HEALTH_Y;
     private final int DRIVER_HEALTH_X;
     private final int DRIVER_HEALTH_Y;
+    private final int PASSENGER_HEALTH_X;
+    private final int PASSENGER_HEALTH_Y;
 
     private final int TRIP_INFO_X;
     private final int TRIP_INFO_Y;
@@ -70,19 +73,26 @@ public class GamePlayScreen{
     public GamePlayScreen(Properties gameProps, Properties msgProps, String playerName) {
         this.GAME_PROPS = gameProps;
         this.MSG_PROPS = msgProps;
-//        this.weatherConditions = loadWeatherConditions(gameProps.getProperty("gamePlay.weatherFile"));
-//        this.sunnyBackground = new Background(
-//                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
-//                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
-//                gameProps.getProperty("backgroundImage.sunny"));
-//
-//        this.rainyBackground = new Background(
-//                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
-//                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
-//                gameProps.getProperty("backgroundImage.raining"));
-//
-//        // Initial background set to sunny
-//        currentBackground = sunnyBackground;
+        this.weatherConditions = loadWeatherConditions(gameProps.getProperty("gamePlay.weatherFile"));
+        //this.sunnyBackground = new Background(512, 384, gameProps.getProperty("backgroundImage.sunny"));
+        //this.rainyBackground = new Background(512, 384, gameProps.getProperty("backgroundImage.raining"));
+        //this.currentBackground = sunnyBackground; // Default background
+
+        this.sunnyBackground = new Background(
+                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
+                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
+                gameProps,
+                "backgroundImage");  // Use the key as a string
+
+        this.rainyBackground = new Background(
+                Integer.parseInt(gameProps.getProperty("window.width")) / 2,
+                Integer.parseInt(gameProps.getProperty("window.height")) / 2,
+                gameProps,
+                "backgroundImage.raining");  // Use the key as a string
+
+
+        // Initial background set to sunny
+        this.currentBackground = sunnyBackground;
 
         // read game objects from file and weather file and populate the game objects and weather conditions
         ArrayList<String[]> lines = IOUtils.readCommaSeperatedFile(gameProps.getProperty("gamePlay.objectsFile"));
@@ -107,8 +117,8 @@ public class GamePlayScreen{
         DRIVER_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.driverHealth.x"));
         TAXI_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.taxiHealth.y"));
         DRIVER_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.driverHealth.y"));
-        //PASSENGER_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.x"));
-        //PASSENGER_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.y"));
+        PASSENGER_HEALTH_X = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.x"));
+        PASSENGER_HEALTH_Y = Integer.parseInt(gameProps.getProperty("gamePlay.passengerHealth.y"));
 
 
         // current trip info vars
@@ -121,6 +131,33 @@ public class GamePlayScreen{
         this.PLAYER_NAME = playerName;
     }
 
+    private List<WeatherCondition> loadWeatherConditions(String filePath) {
+        List<WeatherCondition> conditions = new ArrayList<>();
+        ArrayList<String[]> lines = IOUtils.readCommaSeperatedFile(filePath);
+        for (String[] line : lines) {
+            String type = line[0];
+            int startFrame = Integer.parseInt(line[1]);
+            int endFrame = Integer.parseInt(line[2]);
+            conditions.add(new WeatherCondition(type, startFrame, endFrame));
+        }
+        return conditions;
+    }
+
+    private void updateWeather() {
+        for (WeatherCondition condition : weatherConditions) {
+            if (currFrame >= condition.getStartFrame() && currFrame <= condition.getEndFrame()) {
+                if (condition.getType().equals("RAINY")) {
+                    currentBackground = rainyBackground;
+                } else {
+                    currentBackground = sunnyBackground;
+                }
+                break;
+            }
+        }
+    }
+
+
+
     /**
      * Populate the game objects from the lines read from the game objects file.
      * @param lines list of lines read from the game objects file. lines are processed into String arrays using comma as
@@ -132,11 +169,15 @@ public class GamePlayScreen{
         background1 = new Background(
                 Integer.parseInt(GAME_PROPS.getProperty("window.width")) / 2,
                 Integer.parseInt(GAME_PROPS.getProperty("window.height")) / 2,
-                GAME_PROPS);
+                GAME_PROPS,
+                "backgroundImage"
+        );
         background2 = new Background(
                 Integer.parseInt(GAME_PROPS.getProperty("window.width")) / 2,
                 -1 * Integer.parseInt(GAME_PROPS.getProperty("window.height")) / 2,
-                GAME_PROPS);
+                GAME_PROPS,
+                "backgroundImage"
+        );
         //enemyCars.add(new EnemyCar(GAME_PROPS));  // Add one enemy car statically at the beginning
 
         // Since you haven't learned Lists in Java, we have to use two for loops to iterate over the lines.
@@ -205,8 +246,12 @@ public class GamePlayScreen{
     public boolean update(Input input) {
         currFrame++;
 
-        background1.update(input, background2);
-        background2.update(input, background1);
+        updateWeather();
+
+//        background1.update(input, background2);
+//        background2.update(input, background1);
+        currentBackground.update(input, background2);
+        background2.update(input, currentBackground);
 
         for(Passenger passenger: passengers) {
             passenger.updateWithTaxi(input, taxi);
@@ -335,8 +380,8 @@ public class GamePlayScreen{
         // Display taxi, driver, and passenger health at the top right
         INFO_FONT.drawString("TAXI " + String.format("%.2f", taxi.getHealth()), TAXI_HEALTH_X, TAXI_HEALTH_Y);
         INFO_FONT.drawString("DRIVER " + String.format("%.2f", driver.getHealth()), DRIVER_HEALTH_X, DRIVER_HEALTH_Y);
+        INFO_FONT.drawString("PASSENGER 100.00", PASSENGER_HEALTH_X, PASSENGER_HEALTH_Y);
 
-        // Check if taxi has a passenger
 
         //INFO_FONT.drawString("PASSENGER " + String.format("%.2f", taxi.getTrip().getHealth()), 825, 125);
 
