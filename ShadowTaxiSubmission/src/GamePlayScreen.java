@@ -389,6 +389,7 @@ public class GamePlayScreen{
 
         if(coins.length > 0 && coins[0].getMaxFrames() != coinFramesActive) {
             INFO_FONT.drawString(String.valueOf(Math.round(coinFramesActive)), COIN_X, COIN_Y);
+
         }
         // Draw the driver if not in the taxi
         //driver.draw();
@@ -445,4 +446,5 @@ public class GamePlayScreen{
         return isLevelCompleted;
     }
 }
+
 
